@@ -13,7 +13,7 @@ def home_view(page: ft.Page):
                     controls=[
                         # 헤더
                         ft.Text(
-                            "STATSTAS",
+                            "ΣTATSTAS",
                             size=40,
                             weight=ft.FontWeight.BOLD,
                             color=ft.colors.CYAN_400,

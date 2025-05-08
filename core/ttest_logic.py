@@ -1,5 +1,3 @@
-# core/ttest_logic.py
-
 import numpy as np
 import scipy.stats as stats
 
@@ -68,7 +66,7 @@ def interpret_cohens_d(d):
 # 1. Paired t-test (two-tailed & one-tailed)
 # ----------------------------------------------
 
-def run_paired_ttest(before, after, alpha=0.05, tail="two"):
+def run_paired_ttest(before, after, alpha=0.05, tail="two", return_dict=False):
     try:
         before = np.array(before)
         after = np.array(after)
@@ -76,10 +74,11 @@ def run_paired_ttest(before, after, alpha=0.05, tail="two"):
         norm = check_normality(diff.tolist(), alpha)
 
         if not norm["passed"]:
-            return (
+            error_msg = (
                 "❌ Normality assumption not met.\n"
                 "Consider using Wilcoxon Signed-Rank test."
             )
+            return {"error": error_msg} if return_dict else error_msg
 
         t_stat, p_two = stats.ttest_rel(after, before)
         df = len(before) - 1
@@ -96,25 +95,29 @@ def run_paired_ttest(before, after, alpha=0.05, tail="two"):
         d = (np.mean(diff)) / np.std(diff, ddof=1)
         d_val = round(d, 3)
         d_interp = interpret_cohens_d(d)
-        sig = "✅ Significant" if p < alpha else "❌ Not Significant"
+        sig = "Significant" if p < alpha else "Not Significant"
 
-        # ⚠️ 결과 문자열 조립 – 나중에 view(paired_two.py / paired_one.py)로 분리 예정
-        output = f"🔍 Paired T-test ({tail}-tailed)\n"
-        if direction:
-            output += f"- Direction: {direction}\n"
-        output += (
-            f"- t({df}) = {t_stat:.3f}\n"
-            f"- p = {p:.4f}\n"
-            f"- Critical value = {crit:.3f} (α = {alpha})\n"
-            f"- Cohen's d = {d_val} ({d_interp})\n"
-            f"- Result: {sig}"
-        )
+        result = {
+            "t_stat": t_stat,
+            "p": p,
+            "df": df,
+            "crit": crit,
+            "direction": direction,
+            "cohen_d": d_val,
+            "cohen_d_interp": d_interp,
+            "sig": sig,
+            "tail": tail,
+            "alpha": alpha,
+            "normality": norm,
+            "error": None
+        }
 
-        return output
-
+        if return_dict:
+            return result
+        
     except Exception as e:
-        return f"❌ Error: {e}"
-
+        err = f"❌ Error: {e}"
+        return {"error": err} if return_dict else err
 
 # ----------------------------------------------
 # 2. Independent t-test (two-tailed & one-tailed)
@@ -259,3 +262,4 @@ def run_one_sample_ttest(sample, mu, alpha=0.05, tail="two"):
 
     except Exception as e:
         return f"❌ Error: {e}"
+

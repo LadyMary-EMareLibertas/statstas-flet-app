@@ -44,16 +44,38 @@ def statistics_view(page: ft.Page):
 
     # 검색창 입력 필드
     search_input = ft.TextField(
-        label="Search for a statistical test...",
+        hint_text="Search statistical tools...",
         on_change=search_handler,
         text_style=ft.TextStyle(size=14),
-        border_radius=8,
+        border_radius=0,
         filled=True,
         fill_color=ft.colors.WHITE,
-        border_color=ft.colors.BLUE_GREY_200
+        border_color=ft.colors.CYAN_600,
+        border_width=2,
+        text_align=ft.TextAlign.CENTER,
+        height=56,
+        width=500
     )
 
-    # 전체 통계 도구 라벨 리스트 (접이식 뷰 및 클립보드용)
+    search_container = ft.Container(
+        alignment=ft.alignment.center,
+        padding=ft.padding.only(top=80, bottom=20),  # ✅ 검색창을 더 아래로 내림
+        content=ft.Container(  # ✅ 시각적으로 감싸는 블럭 추가
+            content=ft.Column(
+                controls=[
+                    search_input,
+                    ft.Text("🔍 Type a test name to begin", size=12, color=ft.colors.GREY_500)
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=8
+            ),
+            bgcolor=ft.colors.CYAN_50,              # ✅ 강조용 배경
+            border_radius=0,                        # ✅ 각진 테두리
+            padding=20,
+            border=ft.border.all(2, ft.colors.CYAN_600)  # ✅ 두꺼운 cyan 테두리
+        )
+    )
+
     tool_descriptions = [
         "- Paired t-test (two-tailed)",
         "- Paired t-test (one-tailed)",
@@ -64,7 +86,6 @@ def statistics_view(page: ft.Page):
     ]
     clipboard_text = "\n".join(tool_descriptions)
 
-    # 홈 뷰와 동일한 디자인의 버튼 생성 함수
     def home_style_button(text, icon, on_click):
         return ft.ElevatedButton(
             text=text,
@@ -78,21 +99,18 @@ def statistics_view(page: ft.Page):
             on_click=on_click
         )
 
-    # 이메일 주소 복사 버튼
     copy_email_button = home_style_button(
         "Copy Email",
         ft.icons.CONTENT_COPY,
         lambda e: page.set_clipboard("eugenemariastas@gmail.com")
     )
 
-    # 홈으로 돌아가는 뒤로가기 버튼
     back_button = home_style_button(
         "Back",
         ft.icons.ARROW_BACK,
         lambda e: page.go("/")
     )
 
-    # 사용자가 원하는 도구가 없을 때 요청을 유도하는 안내 텍스트 + 이메일
     tool_list_controls = [
         ft.Text(label, size=13, color=ft.colors.GREY_700) for label in tool_descriptions
     ]
@@ -143,9 +161,9 @@ def statistics_view(page: ft.Page):
                 "Statistics",
                 size=28,
                 weight=ft.FontWeight.BOLD,
-                color=ft.colors.CYAN_400
+                color=ft.colors.BLACK  # ✅ 타이틀 색을 검정으로 변경
             ),
-            search_input,
+            search_container,
             suggestions,
             static_description,
             ft.Divider(),

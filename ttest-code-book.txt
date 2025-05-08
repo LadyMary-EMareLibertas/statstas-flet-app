@@ -1,0 +1,1152 @@
+
+
+
+
+#===========================  T-test Code Book  ================================
+
+
+
+
+#-----------------------------------------------------------------------------
+#                           Table of Contents
+#-----------------------------------------------------------------------------
+# This file contains 5 types of t-tests:
+# 0. Setup : Import core libraries
+# 1. Paired t-test (two-tailed)
+# 2. Paired t-test (one-tailed)
+# 3. Independent t-test (two-tailed)           
+# 4. Independnt t-test (one-tailed)
+# 5. One-sample t-test(two-tailed)
+# 6. One-sample t-test(one-tailed)
+e
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------
+#                   0. Setup : Import core libraries
+#-----------------------------------------------------------------------------
+# Core scientific and statistical libraries for data analysis
+
+import numpy as np                           # Numerical operations and arrays
+import pandas as pd                          # Data manipulation and DataFrames
+import matplotlib.pyplot as plt              # Basic plotting
+import seaborn as sns                        # Statistical data visualization
+
+from scipy import stats                     # Hypothesis testing (t-test, ANOVA, etc.)
+import statsmodels.api as sm                # Statistical models and tests
+import statsmodels.formula.api as smf       # R-style formulas for modeling
+import pingouin as pg                       # Simple and readable statistical analysis
+import patsy                                # Formula parser used by statsmodels
+
+from sklearn.linear_model import LinearRegression        # Machine learning: regression
+from sklearn.model_selection import train_test_split     # Train/test data splitting
+
+from tabulate import tabulate               # Nicely formatted tables for output
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------  
+#                       1. Paired t-test (two-tailed)  
+#-----------------------------------------------------------------------------  
+
+import numpy as np
+import scipy.stats as stats
+
+# ==== DATA INPUT ====
+before = [580, 590, 600, 570, 510]
+after = [650, 690, 670, 600, 670]
+alpha = 0.05
+# ====================
+
+print("\n\n🔍 Paired t-test (two-tailed) result:")
+print("-----------------------------------------------------------------------------")
+
+
+# === Normality check on difference ===
+def check_normality(diff):
+    shapiro_p = stats.shapiro(diff).pvalue
+    ks_p = stats.kstest(diff, 'norm', args=(np.mean(diff), np.std(diff, ddof=1))).pvalue
+    ad_result = stats.anderson(diff)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values[2]  # 5% level
+
+    shapiro_pass = shapiro_p > alpha
+    ks_pass = ks_p > alpha
+    ad_pass = ad_stat < ad_crit
+    n_passed = sum([shapiro_pass, ks_pass, ad_pass])
+
+    return {
+        "shapiro_p": shapiro_p,
+        "ks_p": ks_p,
+        "ad_stat": ad_stat,
+        "ad_crit": ad_crit,
+        "passed": n_passed >= 1,
+        "shapiro_pass": shapiro_pass,
+        "ks_pass": ks_pass,
+        "ad_pass": ad_pass
+    }
+
+# Compute difference
+diff = np.array(after) - np.array(before)
+
+# Normality test
+res = check_normality(diff)
+
+print("\n🔍 Normality Test on Differences (after - before):")
+print("-----------------------------------------------------------------------------")
+print(f"# Shapiro-Wilk: {'passed' if res['shapiro_pass'] else 'failed'} (p = {res['shapiro_p']:.4f})")
+print(f"# Kolmogorov-Smirnov: {'passed' if res['ks_pass'] else 'failed'} (p = {res['ks_p']:.4f})")
+print(f"# Anderson-Darling: {'passed' if res['ad_pass'] else 'failed'} (stat = {res['ad_stat']:.4f}, crit = {res['ad_crit']:.4f})")
+
+if res["passed"]:
+    print("\n# ✅ Normality assumption met (at least 1 test passed). Proceeding to t-test...\n")
+else:
+    print("\n# ❌ Normality assumption failed. Consider using Wilcoxon Signed-Rank test.\n")
+    exit()
+
+
+# === Paired t-test ===
+t_stat, p_val = stats.ttest_rel(after, before)
+df = len(before) - 1
+
+# Two-tailed critical value
+critical_val = stats.t.ppf(1 - alpha / 2, df)
+
+# Significance
+significance = "significant" if p_val < alpha else "not significant (p ≥ α)"
+
+# === Cohen's d ===
+mean_diff = np.mean(diff)
+std_diff = np.std(diff, ddof=1)
+cohens_d = round(abs(mean_diff / std_diff), 3)
+
+# === Output Summary ===
+print("T-test Result:")
+print("-----------------------------------------------------------------------------")
+print(f"#  - t({df}) = {t_stat:.3f}")
+print(f"#  - p = {p_val:.4f} (two-tailed)")
+print(f"#  - critical value = ±{critical_val:.3f} (α = {alpha})")
+print(f"#  - Test Result: {significance}")
+print(f"#  - Cohen’s d ≈ {cohens_d}")
+print("-----------------------------------------------------------------------------")
+print("References (APA 7th Edition):")
+print("Gosset, W. S. (1908). The probable error of a mean.")
+print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n")
+print("Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,")
+print("Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,")
+print("Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,")
+print("... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.")
+print("*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2")
+print("-----------------------------------------------------------------------------")
+
+  
+#-----------------------------------------------------------------------------  
+#----------------------------------------------------------------------------- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------
+#                       2. Paired t-test (one-tailed)
+#-----------------------------------------------------------------------------
+
+
+
+
+from scipy.stats import ttest_rel, t, shapiro, kstest, anderson, wilcoxon
+import numpy as np
+
+# Sample data — replace with your own
+before = [19.07, 16.12, 13.44, 18.78, 16.05]
+after = [25.96, 23.75, 15.88, 24.52, 19.76]
+
+# Parameters
+alpha = 0.05
+df = len(before) - 1
+diff = np.array(after) - np.array(before)
+
+# === Normality check ===
+def check_normality(diff):
+    shapiro_p = shapiro(diff).pvalue
+    ks_p = kstest(diff, 'norm', args=(np.mean(diff), np.std(diff, ddof=1))).pvalue
+    ad_result = anderson(diff)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values[2]  # 5% 기준
+
+    shapiro_pass = shapiro_p > alpha
+    ks_pass = ks_p > alpha
+    ad_pass = ad_stat < ad_crit
+    n_passed = sum([shapiro_pass, ks_pass, ad_pass])
+
+    return {
+        "shapiro_p": shapiro_p,
+        "ks_p": ks_p,
+        "ad_stat": ad_stat,
+        "ad_crit": ad_crit,
+        "passed": n_passed >= 1,
+        "shapiro_pass": shapiro_pass,
+        "ks_pass": ks_pass,
+        "ad_pass": ad_pass
+    }
+
+res = check_normality(diff)
+
+print("\n\n🔍 Paired t-test (one-tailed) result:")
+print("-----------------------------------------------------------------------------")
+
+
+print("\n🔍 Normality Test on Differences (after - before):")
+print("-----------------------------------------------------------------------------")
+print(f"# Shapiro-Wilk: {'passed' if res['shapiro_pass'] else 'failed'} (p = {res['shapiro_p']:.4f})")
+print(f"# Kolmogorov-Smirnov: {'passed' if res['ks_pass'] else 'failed'} (p = {res['ks_p']:.4f})")
+print(f"# Anderson-Darling: {'passed' if res['ad_pass'] else 'failed'} (stat = {res['ad_stat']:.4f}, crit = {res['ad_crit']:.4f})")
+
+if not res["passed"]:
+    print("\n# ❌ Normality assumption failed. Consider using Wilcoxon Signed-Rank test.")
+    try:
+        stat, p_wilcoxon = wilcoxon(diff, alternative='greater' if np.mean(diff) > 0 else 'less')
+        print(f"# Wilcoxon Signed-Rank Test: W = {stat:.3f}, p = {p_wilcoxon:.4f}")
+    except Exception as e:
+        print(f"# Wilcoxon test failed: {e}")
+    print("-----------------------------------------------------------------------------")
+    exit()
+else:
+    print("\n# ✅ Normality assumption met (at least 1 test passed). Proceeding to t-test...\n")
+
+# === Run paired t-test ===
+t_stat, p_val_two_tailed = ttest_rel(after, before)
+
+# Direction and one-tailed p-value
+if t_stat > 0:
+    direction = "before < after"
+    p_val_one_tailed = p_val_two_tailed / 2
+else:
+    direction = "before > after"
+    p_val_one_tailed = p_val_two_tailed / 2
+
+# Critical value
+critical_val = t.ppf(1 - alpha, df)
+
+# Significance
+significance = "significant" if p_val_one_tailed < alpha else "not significant"
+
+# Cohen's d
+def compute_cohens_d_paired(before, after):
+    differences = np.array(after) - np.array(before)
+    mean_diff = np.mean(differences)
+    sd_diff = np.std(differences, ddof=1)
+    return mean_diff / sd_diff
+
+cohens_d = compute_cohens_d_paired(before, after)
+
+# Output
+print("T-test Result:")
+print("-----------------------------------------------------------------------------")
+print(f"Direction: {direction}")
+print(f"α = {alpha}")
+print(f"t({df}) = {t_stat:.3f}")
+print(f"p = {p_val_one_tailed:.4f} (one-tailed)")
+print(f"Critical value = {critical_val:.3f} (computed)")
+print(f"Test Result: {significance}")
+print(f"Cohen’s d = {cohens_d:.3f}")
+print("-----------------------------------------------------------------------------")
+print("References (APA 7th Edition):\n")
+print("Gosset, W. S. (1908). The probable error of a mean.")
+print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n")
+print("""Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,
+Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,
+Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,
+... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.
+*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2""")
+print("-----------------------------------------------------------------------------")
+
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------------------------
+#                      3. Independent t-test (two-tailed)
+# -----------------------------------------------------------------------------
+
+# 🔍 Independent t-test (two-tailed) result
+# -----------------------------------------------------------------------------
+
+# Alpha level (α): 0.05
+
+# ==== DATA INPUT (edit only these lines) ====
+group1 = [10.1, 10.3, 10.2, 10.0, 10.4, 10.2, 10.1, 10.3]
+group2 = [8.0, 14.0, 9.0, 13.0, 11.0, 11.1, 11.2, 11.3]
+alpha = 0.05
+# ============================================
+
+print("🔍 Independent t-test (two-tailed) result:")
+print("-" * 77)
+
+# Import core libraries
+import scipy.stats as stats
+import numpy as np
+
+# === T-test Functions ===
+
+def compute_cohens_d(group1, group2):
+    n1, n2 = len(group1), len(group2)
+    s1, s2 = np.var(group1, ddof=1), np.var(group2, ddof=1)
+    pooled_sd = np.sqrt(((n1 - 1)*s1 + (n2 - 1)*s2) / (n1 + n2 - 2))
+    d = (np.mean(group1) - np.mean(group2)) / pooled_sd
+    return round(abs(d), 3)
+
+def compute_cohens_d_welch(group1, group2):
+    s1 = np.std(group1, ddof=1)
+    s2 = np.std(group2, ddof=1)
+    avg_sd = (s1 + s2) / 2
+    d = (np.mean(group1) - np.mean(group2)) / avg_sd
+    return round(abs(d), 3)
+
+def interpret_d(d):
+    if d < 0.2:
+        return "negligible"
+    elif d < 0.5:
+        return "small"
+    elif d < 0.8:
+        return "medium"
+    else:
+        return "large"
+
+def run_student_ttest(group1, group2, alpha=0.05):
+    df = len(group1) + len(group2) - 2
+    t_stat, p_val = stats.ttest_ind(group1, group2, equal_var=True)
+    critical_t = stats.t.ppf(1 - alpha / 2, df)
+    d = compute_cohens_d(group1, group2)
+    d_interp = interpret_d(d)
+    significance = "significant (p < α)" if p_val < alpha else "not significant (p ≥ α)"
+    
+    print("Student’s t-test Result:")
+    print(f"#  - t({df}) = {t_stat:.3f}")
+    print(f"#  - p = {p_val:.4f}")
+    print(f"#  - critical value = {critical_t:.3f} (α = {alpha})")
+    print(f"#  - Cohen’s d = {d} ({d_interp} effect)")
+    print("#  - Test Result:", significance)
+    print()
+
+def run_welch_ttest(group1, group2, alpha=0.05):
+    n1, n2 = len(group1), len(group2)
+    m1, m2 = np.mean(group1), np.mean(group2)
+    v1, v2 = np.var(group1, ddof=1), np.var(group2, ddof=1)
+    se = np.sqrt(v1/n1 + v2/n2)
+    t_stat = (m1 - m2) / se
+    df = ((v1/n1 + v2/n2)**2) / (((v1/n1)**2)/(n1-1) + ((v2/n2)**2)/(n2-1))
+    p_val = 2 * (1 - stats.t.cdf(abs(t_stat), df))
+    critical_t = stats.t.ppf(1 - alpha/2, df)
+    d = compute_cohens_d_welch(group1, group2)
+    d_interp = interpret_d(d)
+    significance = "significant (p < α)" if p_val < alpha else "not significant (p ≥ α)"
+    
+    print("Welch’s t-test Result:")
+    print(f"#  - t({df:.2f}) = {t_stat:.3f}")
+    print(f"#  - p = {p_val:.4f}")
+    print(f"#  - critical value = {critical_t:.3f} (α = {alpha})")
+    print(f"#  - Cohen’s d ≈ {d} ({d_interp} effect)")
+    print("#  - Test Result:", significance)
+    print()
+
+
+# === Normality Check ===
+
+def check_normality(group):
+    alpha = 0.05
+    shapiro_p = stats.shapiro(group).pvalue
+    shapiro_pass = shapiro_p > alpha
+
+    ks_p = stats.kstest(group, 'norm', args=(np.mean(group), np.std(group, ddof=1))).pvalue
+    ks_pass = ks_p > alpha
+
+    ad_result = stats.anderson(group)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values
+    ad_pass = ad_stat < ad_crit[2]
+
+    result = {
+        "Shapiro": {"p": shapiro_p, "passed": shapiro_pass},
+        "KS": {"p": ks_p, "passed": ks_pass},
+        "Anderson": {"stat": ad_stat, "passed": ad_pass},
+        "summary": {
+            "total_passed": sum([shapiro_pass, ks_pass, ad_pass]),
+            "normal": sum([shapiro_pass, ks_pass, ad_pass]) >= 2
+        }
+    }
+    return result
+
+def assess_normality_and_continue(group1, group2):
+    print("🔍 Normality Test:")
+    print("-" * 77)
+
+    # Shortcut: If both groups have sample size ≥ 30, skip normality check
+    if len(group1) >= 30 and len(group2) >= 30:
+        print("# ✅ Sample size ≥ 30 for both groups. Normality check skipped (CLT assumption).")
+        return True
+
+    # Otherwise, perform normality checks
+    res1 = check_normality(group1)
+    res2 = check_normality(group2)
+
+    def format_group_result(group_name, res):
+        print(f"# {group_name}: {'Passed' if res['summary']['normal'] else 'Failed'}")
+        print(f"#    Shapiro-Wilk: {'passed' if res['Shapiro']['passed'] else 'failed'} (p = {res['Shapiro']['p']:.4f})")
+        print(f"#    Kolmogorov-Smirnov: {'passed' if res['KS']['passed'] else 'failed'} (p = {res['KS']['p']:.4f})")
+        print(f"#    Anderson-Darling: {'passed' if res['Anderson']['passed'] else 'failed'} (stat = {res['Anderson']['stat']:.4f})\n")
+
+    format_group_result("Group 1", res1)
+    format_group_result("Group 2", res2)
+
+    if res1["summary"]["total_passed"] >= 1 and res2["summary"]["total_passed"] >= 1:
+        print("# ✅ Normality assumption met for both groups.")
+        print("# Proceeding to variance test...\n")
+        return True
+    else:
+        print("# ❌ Normality assumption not fully met.")
+        print("# Consider using a non-parametric test (e.g., Mann-Whitney U) instead.")
+        return False
+
+if not assess_normality_and_continue(group1, group2):
+    exit()
+
+# === Variance Equality Test ===
+
+def check_variance_equality(group1, group2, alpha=0.05):
+    levene_stat, levene_p = stats.levene(group1, group2)
+    equal_var = levene_p > alpha
+
+    print("Variance Test:")
+    if equal_var:
+        print(f"#  - Levene’s test: passed (F = {levene_stat:.3f}, p = {levene_p:.4f})")
+        print("#  → Equal variance assumed (Student’s t-test will be applied)\n")
+    else:
+        print(f"#  - Levene’s test: failed (F = {levene_stat:.3f}, p = {levene_p:.4f})")
+        print("#  → Unequal variance detected (Welch’s t-test will be applied)\n")
+
+    return equal_var
+
+equal_var = check_variance_equality(group1, group2, alpha)
+
+
+# === Flags to track which test was used ===
+welch_used = False
+student_used = False
+
+# === Run appropriate t-test based on variance result ===
+if equal_var:
+    student_used = True
+    run_student_ttest(group1, group2, alpha)
+else:
+    welch_used = True
+    run_welch_ttest(group1, group2, alpha)
+
+# -----------------------------------------------------------------------------
+# References
+# -----------------------------------------------------------------------------
+print("-" * 77)
+print("References")
+print("-" * 77)
+
+# SciPy Reference (always shown)
+print("""Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,
+Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,
+Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,
+... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.
+*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2""")
+
+# Welch Reference (if used)
+if welch_used:
+    print()
+    print("Welch, B. L. (1947). The generalization of Student's problem when several different")
+    print("population variances are involved. *Biometrika, 34*(1–2), 28–35.")
+    print("https://doi.org/10.1093/biomet/34.1-2.28")
+
+# Student Reference (if used)
+if student_used:
+    print()
+    print("Gosset, W. S. (1908). The probable error of a mean.")
+    print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1")
+
+print("-" * 77)
+
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------------------------
+#                 4. Independent t-test (one-tailed)
+# -----------------------------------------------------------------------------
+
+import scipy.stats as stats
+import numpy as np
+
+# ==== DATA INPUT (edit only these lines) ====
+group1 = [5.1, 5.3, 5.2, 5.4, 5.5, 5.2, 5.3, 5.1, 5.2, 5.4]
+group2 = [5.5, 5.6, 5.4, 5.5, 5.6, 5.5, 5.7, 5.6, 5.5, 5.4]
+alpha = 0.05
+# ============================================
+
+print("\n\n🔍 Independent t-test (one-tailed) result:")
+print("-----------------------------------------------------------------------------")
+
+# === Normality Check ===
+def check_normality(group):
+    alpha = 0.05
+    shapiro_p = stats.shapiro(group).pvalue
+    ks_p = stats.kstest(group, 'norm', args=(np.mean(group), np.std(group, ddof=1))).pvalue
+    ad_result = stats.anderson(group)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values[2]  # 5% level
+
+    shapiro_pass = shapiro_p > alpha
+    ks_pass = ks_p > alpha
+    ad_pass = ad_stat < ad_crit
+
+    n_passed = sum([shapiro_pass, ks_pass, ad_pass])
+    return {
+        "shapiro_p": shapiro_p,
+        "ks_p": ks_p,
+        "ad_stat": ad_stat,
+        "ad_crit": ad_crit,
+        "passed": n_passed >= 1,
+        "shapiro_pass": shapiro_pass,
+        "ks_pass": ks_pass,
+        "ad_pass": ad_pass
+    }
+
+# If both groups have >= 30 samples, skip normality check
+if len(group1) >= 30 and len(group2) >= 30:
+    print("# ✅ Sample size ≥ 30 for both groups. Normality check skipped (CLT assumption).\n")
+    normality_passed = True
+else:
+    res1 = check_normality(group1)
+    res2 = check_normality(group2)
+
+    print("\n🔍 Normality Test:")
+    print("-----------------------------------------------------------------------------")
+    print("# Group 1: {}".format("Passed" if res1["passed"] else "Failed"))
+    print(f"#    Shapiro-Wilk: {'passed' if res1['shapiro_pass'] else 'failed'} (p = {res1['shapiro_p']:.4f})")
+    print(f"#    Kolmogorov-Smirnov: {'passed' if res1['ks_pass'] else 'failed'} (p = {res1['ks_p']:.4f})")
+    print(f"#    Anderson-Darling: {'passed' if res1['ad_pass'] else 'failed'} (stat = {res1['ad_stat']:.4f})")
+
+    print("\n# Group 2: {}".format("Passed" if res2["passed"] else "Failed"))
+    print(f"#    Shapiro-Wilk: {'passed' if res2['shapiro_pass'] else 'failed'} (p = {res2['shapiro_p']:.4f})")
+    print(f"#    Kolmogorov-Smirnov: {'passed' if res2['ks_pass'] else 'failed'} (p = {res2['ks_p']:.4f})")
+    print(f"#    Anderson-Darling: {'passed' if res2['ad_pass'] else 'failed'} (stat = {res2['ad_stat']:.4f})")
+
+    if res1["passed"] and res2["passed"]:
+        print("\n# ✅ Normality assumption met for both groups.")
+        print("# Proceeding to variance test...\n")
+        normality_passed = True
+    else:
+        print("\n# ❌ Normality assumption not met.")
+        normality_passed = False
+
+if not normality_passed:
+    exit()
+
+# === Variance Equality Test ===
+levene_stat, levene_p = stats.levene(group1, group2)
+equal_var = levene_p > alpha
+print("Variance Test:")
+print("-----------------------------------------------------------------------------")
+if equal_var:
+    print(f"#  - Levene’s test: passed (F = {levene_stat:.3f}, p = {levene_p:.4f})")
+    print("#  → Equal variance assumed (Student’s t-test will be applied)\n")
+else:
+    print(f"#  - Levene’s test: failed (F = {levene_stat:.3f}, p = {levene_p:.4f})")
+    print("#  → Unequal variance detected (Welch’s t-test will be applied)\n")
+
+
+# === T-test Calculation (auto-select) ===
+
+m1, m2 = np.mean(group1), np.mean(group2)
+s1, s2 = np.var(group1, ddof=1), np.var(group2, ddof=1)
+n1, n2 = len(group1), len(group2)
+
+if equal_var:
+    df = n1 + n2 - 2
+    t_stat, p_two = stats.ttest_ind(group1, group2, equal_var=True)
+    d = abs((m1 - m2) / np.sqrt(((n1 - 1)*s1 + (n2 - 1)*s2) / df))
+    test_type = "Student’s t-test"
+else:
+    se = np.sqrt(s1/n1 + s2/n2)
+    t_stat = (m1 - m2) / se
+    df = ((s1/n1 + s2/n2)**2) / (((s1/n1)**2)/(n1-1) + ((s2/n2)**2)/(n2-1))
+    p_two = 2 * (1 - stats.t.cdf(abs(t_stat), df))
+    d = abs((m1 - m2) / ((np.std(group1, ddof=1) + np.std(group2, ddof=1)) / 2))
+    test_type = "Welch’s t-test"
+
+# Effect size interpretation
+cohens_d = round(d, 3)
+if d < 0.2:
+    d_interp = "negligible"
+elif d < 0.5:
+    d_interp = "small"
+elif d < 0.8:
+    d_interp = "medium"
+else:
+    d_interp = "large"
+
+# One-tailed p-value and direction based on t-statistic
+if t_stat > 0:
+    direction = "group1 < group2"
+    p_one = p_two / 2
+else:
+    direction = "group1 > group2"
+    p_one = p_two / 2
+
+# One-tailed critical value and result
+critical_val = stats.t.ppf(1 - alpha, df)
+significance = "significant" if p_one < alpha else "not significant (p ≥ α)"
+
+# Output result summary
+print(f"{test_type} Result:")
+print("-----------------------------------------------------------------------------")
+print(f"#  - Direction: {direction}")
+print(f"#  - t({df:.2f}) = {t_stat:.3f}")
+print(f"#  - p = {p_one:.4f} (one-tailed)")
+print(f"#  - critical value = {critical_val:.3f} (α = {alpha})")
+print(f"#  - Test Result: {significance}")
+print(f"#  - Cohen’s d ≈ {cohens_d} ({d_interp} effect)")
+
+# Print references
+print("-----------------------------------------------------------------------------")
+print("References (APA 7th Edition):")
+print("Gosset, W. S. (1908). The probable error of a mean.")
+print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n")
+print("Welch, B. L. (1947). The generalization of Student's problem when several different")
+print("population variances are involved. *Biometrika, 34*(1–2), 28–35.")
+print("https://doi.org/10.1093/biomet/34.1-2.28")
+print("Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,")
+print("Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,")
+print("Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,")
+print("... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.")
+print("*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2")
+print("-----------------------------------------------------------------------------")
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------------------------
+#                        5. One-sample t-test (two-tailed)
+# -----------------------------------------------------------------------------
+
+import scipy.stats as stats
+import numpy as np
+
+# =============   DATA INPUT   ===============
+sample = [1, 1, 1, 2, 2, 2, 3, 3, 100, 150]
+mu = 100.0     
+alpha = 0.05
+# ============================================
+
+print("\n\n🔍 One-sample t-test (two-tailed) result:")
+print("-----------------------------------------------------------------------------")
+
+# === Normality Check ===
+def check_normality_onesample(group):
+    alpha = 0.05
+    shapiro_p = stats.shapiro(group).pvalue
+    ks_p = stats.kstest(group, 'norm', args=(np.mean(group), np.std(group, ddof=1))).pvalue
+    ad_result = stats.anderson(group)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values[2]  # 5% level
+
+    shapiro_pass = shapiro_p > alpha
+    ks_pass = ks_p > alpha
+    ad_pass = ad_stat < ad_crit
+
+    n_passed = sum([shapiro_pass, ks_pass, ad_pass])
+    return {
+        "shapiro_p": shapiro_p,
+        "ks_p": ks_p,
+        "ad_stat": ad_stat,
+        "ad_crit": ad_crit,
+        "passed": n_passed >= 1,
+        "shapiro_pass": shapiro_pass,
+        "ks_pass": ks_pass,
+        "ad_pass": ad_pass
+    }
+
+# If sample size ≥ 30, skip normality check
+if len(sample) >= 30:
+    print("# ✅ Sample size ≥ 30. Normality check skipped (CLT assumption).\n")
+    normality_passed = True
+else:
+    res = check_normality_onesample(sample)
+
+    print("\n🔍 Normality Test:")
+    print("-----------------------------------------------------------------------------")
+    print("Sample: {}".format("Passed" if res["passed"] else "Failed"))
+    print(f"    Shapiro-Wilk: {'passed' if res['shapiro_pass'] else 'failed'} (p = {res['shapiro_p']:.4f})")
+    print(f"    Kolmogorov-Smirnov: {'passed' if res['ks_pass'] else 'failed'} (p = {res['ks_p']:.4f})")
+    print(f"    Anderson-Darling: {'passed' if res['ad_pass'] else 'failed'} (stat = {res['ad_stat']:.4f})")
+
+    if res["passed"]:
+        print("\n# ✅ Normality assumption met.")
+        normality_passed = True
+    else:
+        print("\n❌ Normality assumption not met.")
+        print("One-sample t-test is not valid under these conditions.")
+        print("Consider using a non-parametric test such as the Wilcoxon signed-rank test.")
+        print("-----------------------------------------------------------------------------")
+        exit()
+
+# === One-sample t-test ===
+n = len(sample)
+df = n - 1
+sample_mean = np.mean(sample)
+sample_std = np.std(sample, ddof=1)
+se = sample_std / np.sqrt(n)
+
+t_stat = (sample_mean - mu) / se
+p_val = 2 * (1 - stats.t.cdf(abs(t_stat), df))
+critical_val = stats.t.ppf(1 - alpha / 2, df)
+
+# === Cohen’s d ===
+cohens_d = round((sample_mean - mu) / sample_std, 3)
+
+# Effect size interpretation
+if abs(cohens_d) < 0.2:
+    d_interp = "negligible"
+elif abs(cohens_d) < 0.5:
+    d_interp = "small"
+elif abs(cohens_d) < 0.8:
+    d_interp = "medium"
+else:
+    d_interp = "large"
+
+# === Significance Result ===
+significance = "significant" if p_val < alpha else "not significant (p ≥ α)"
+
+# === Output ===
+print("One-sample t-test Result:")
+print("-----------------------------------------------------------------------------")
+print(f"#  - Population mean (μ) = {mu}")
+print(f"#  - Sample mean = {sample_mean:.3f}")
+print(f"#  - t({df}) = {t_stat:.3f}")
+print(f"#  - p = {p_val:.4f}")
+print(f"#  - critical value = {critical_val:.3f} (α = {alpha})")
+print(f"#  - Test Result: {significance}")
+print(f"#  - Cohen’s d = {cohens_d} ({d_interp} effect)")
+print("-----------------------------------------------------------------------------")
+
+# === References ===
+print("References (APA 7th Edition):")
+print("Gosset, W. S. (1908). The probable error of a mean.")
+print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n")
+print("Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,")
+print("Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,")
+print("Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,")
+print("... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.")
+print("*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2")
+print("-----------------------------------------------------------------------------")
+
+
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------------------------
+#                        6. One-sample t-test (one-tailed)
+# -----------------------------------------------------------------------------
+
+import scipy.stats as stats
+import numpy as np
+
+# =============   DATA INPUT   ===============
+sample = [101.2, 99.8, 100.5, 102.3, 98.7, 100.1, 101.5]
+mu = 100.0     
+alpha = 0.05
+# ============================================
+
+print("\n\n🔍 One-sample t-test (one-tailed) result:")
+print("-----------------------------------------------------------------------------")
+
+# === Normality Check ===
+def check_normality_onesample(group):
+    alpha = 0.05
+    shapiro_p = stats.shapiro(group).pvalue
+    ks_p = stats.kstest(group, 'norm', args=(np.mean(group), np.std(group, ddof=1))).pvalue
+    ad_result = stats.anderson(group)
+    ad_stat = ad_result.statistic
+    ad_crit = ad_result.critical_values[2]  # 5% level
+
+    shapiro_pass = shapiro_p > alpha
+    ks_pass = ks_p > alpha
+    ad_pass = ad_stat < ad_crit
+
+    n_passed = sum([shapiro_pass, ks_pass, ad_pass])
+    return {
+        "shapiro_p": shapiro_p,
+        "ks_p": ks_p,
+        "ad_stat": ad_stat,
+        "ad_crit": ad_crit,
+        "passed": n_passed >= 1,
+        "shapiro_pass": shapiro_pass,
+        "ks_pass": ks_pass,
+        "ad_pass": ad_pass
+    }
+
+# If sample size ≥ 30, skip normality check
+if len(sample) >= 30:
+    print("# ✅ Sample size ≥ 30. Normality check skipped (CLT assumption).\n")
+    normality_passed = True
+else:
+    res = check_normality_onesample(sample)
+
+    print("\n🔍 Normality Test:")
+    print("-----------------------------------------------------------------------------")
+    print("Sample: {}".format("Passed" if res["passed"] else "Failed"))
+    print(f"    Shapiro-Wilk: {'passed' if res['shapiro_pass'] else 'failed'} (p = {res['shapiro_p']:.4f})")
+    print(f"    Kolmogorov-Smirnov: {'passed' if res['ks_pass'] else 'failed'} (p = {res['ks_p']:.4f})")
+    print(f"    Anderson-Darling: {'passed' if res['ad_pass'] else 'failed'} (stat = {res['ad_stat']:.4f})")
+
+    if res["passed"]:
+        print("\n ✅ Normality assumption met.")
+        normality_passed = True
+    else:
+        print("\n❌ Normality assumption not met.")
+        print("One-sample t-test is not valid under these conditions.")
+        print("Consider using a non-parametric test such as the Wilcoxon signed-rank test.")
+        print("-----------------------------------------------------------------------------")
+        exit()
+
+# === One-sample t-test ===
+n = len(sample)
+df = n - 1
+sample_mean = np.mean(sample)
+sample_std = np.std(sample, ddof=1)
+se = sample_std / np.sqrt(n)
+
+t_stat = (sample_mean - mu) / se
+
+# Direction auto-determined
+if t_stat > 0:
+    direction = "μ < sample mean"
+    p_val = 1 - stats.t.cdf(t_stat, df)
+else:
+    direction = "μ > sample mean"
+    p_val = stats.t.cdf(t_stat, df)
+
+critical_val = stats.t.ppf(1 - alpha, df)
+
+# === Cohen’s d ===
+cohens_d = round((sample_mean - mu) / sample_std, 3)
+
+# Effect size interpretation
+if abs(cohens_d) < 0.2:
+    d_interp = "negligible"
+elif abs(cohens_d) < 0.5:
+    d_interp = "small"
+elif abs(cohens_d) < 0.8:
+    d_interp = "medium"
+else:
+    d_interp = "large"
+
+# === Significance Result ===
+significance = "significant" if p_val < alpha else "not significant (p ≥ α)"
+
+# === Output ===
+print("One-sample t-test Result (one-tailed):")
+print("-----------------------------------------------------------------------------")
+print(f"  - Direction: {direction}")
+print(f"  - Population mean (μ) = {mu}")
+print(f"  - Sample mean = {sample_mean:.3f}")
+print(f"  - t({df}) = {t_stat:.3f}")
+print(f"  - p = {p_val:.4f}")
+print(f"  - critical value = {critical_val:.3f} (α = {alpha})")
+print(f"  - Test Result: {significance}")
+print(f"  - Cohen’s d = {cohens_d} ({d_interp} effect)")
+print("-----------------------------------------------------------------------------")
+
+# === References ===
+print("References (APA 7th Edition):")
+print("Gosset, W. S. (1908). The probable error of a mean.")
+print("*Biometrika, 6*(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n")
+print("Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D.,")
+print("Burovski, E., Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J.,")
+print("Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J.,")
+print("... van Mulbregt, P. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.")
+print("*Nature Methods, 17*(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2")
+print("-----------------------------------------------------------------------------")
+
+
+
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+

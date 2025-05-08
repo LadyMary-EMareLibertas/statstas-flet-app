@@ -74,10 +74,10 @@ def statistics_view(page: ft.Page):
             text=text,
             icon=icon,
             style=ft.ButtonStyle(
-                color=ft.colors.BLUE_700,
-                overlay_color=ft.colors.BLUE_50,
+                color=ft.colors.BLUE_GREY_800,
+                overlay_color=ft.colors.BLUE_GREY_50,
                 padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                shape=ft.RoundedRectangleBorder(radius=6),
+                shape=ft.RoundedRectangleBorder(radius=20),
                 # bgcolor나 side는 명시하지 않아야 홈과 같은 입체감 유지됨
             ),
             on_click=on_click
@@ -161,6 +161,7 @@ def statistics_view(page: ft.Page):
     # View 객체 반환: 이 뷰는 "/statistics" 라우트에 연결됨
     return ft.View(
         route="/statistics",
+        scroll=ft.ScrollMode.AUTO,  # 세로 스크롤 자동 활성화
         controls=[
             # 페이지 상단 제목
             ft.Text(

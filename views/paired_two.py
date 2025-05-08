@@ -12,29 +12,47 @@ def paired_view(page: ft.Page):
     alpha_input = ft.TextField(label="Alpha", value="0.05")
 
     # 결과를 출력할 텍스트 객체
-    result_text = ft.Text()
+    result_text = ft.Text(
+        "",
+        no_wrap=False,
+        selectable=True
+    )
 
     # 결과 출력을 감싸는 카드 스타일 컨테이너
     result_card = ft.Container(
-        content=ft.Row(
+        content=ft.Column(
             controls=[
-                result_text,
-                ft.IconButton(
-                    icon=ft.icons.CONTENT_COPY,
-                    tooltip="Copy result",
-                    icon_color=ft.colors.BLUE_700,
-                    on_click=lambda e: page.set_clipboard(result_text.value)
+                ft.Container(  # 텍스트는 왼쪽 정렬
+                    content=result_text,
+                    alignment=ft.alignment.center_left
+                ),
+                ft.Container(  # 복사 버튼은 오른쪽 하단 정렬
+                    content=ft.Row(
+                        controls=[
+                            ft.IconButton(
+                                icon=ft.icons.CONTENT_COPY,
+                                tooltip="Copy result",
+                                icon_color=ft.colors.BLUE_700,
+                                on_click=lambda e: page.set_clipboard(result_text.value)
+                            )
+                        ],
+                        alignment=ft.MainAxisAlignment.END
+                    ),
+                    alignment=ft.alignment.bottom_right
                 )
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            spacing=8
+            spacing=8,
+            expand=True,  # 하단 정렬을 위해 전체 높이 사용
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN  # 텍스트 위, 버튼 아래 배치
         ),
+        width=600,
+        height=200,  # 필요 시 높이 지정
         padding=20,
         margin=ft.margin.only(top=10),
         border_radius=8,
         bgcolor=ft.colors.GREY_50,
         border=ft.border.all(1, ft.colors.CYAN_400),
-        visible=False  # ← 처음에는 숨김 상태
+        visible=False
     )
 
     # t-test 실행 함수 (Run 버튼을 누르면 실행됨)
@@ -65,25 +83,25 @@ def paired_view(page: ft.Page):
             text=text,
             icon=icon,
             style=ft.ButtonStyle(
-                color=ft.colors.BLUE_700,
-                overlay_color=ft.colors.BLUE_50,
+                color=ft.colors.BLUE_GREY_800,
+                overlay_color=ft.colors.BLUE_GREY_50,
                 padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                shape=ft.RoundedRectangleBorder(radius=6),
+                shape=ft.RoundedRectangleBorder(radius=20),
             ),
             on_click=on_click
         )
 
     # 전체 화면(View) 구성
     return ft.View(
-        route="/paired_two",  # 이 뷰의 경로 이름 (라우팅과 연결됨)
+        route="/paired_two",
+        scroll=ft.ScrollMode.AUTO,  # 세로 스크롤 허용
         controls=[
-            ft.Text("Paired t-test (Two-tailed)", size=28, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),  # 상단 제목
+            ft.Text("Paired t-test (Two-tailed)", size=28, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
 
-            before_input,   # 입력창 1: before 데이터
-            after_input,    # 입력창 2: after 데이터
-            alpha_input,    # 입력창 3: alpha (유의수준)
+            before_input,   # 입력창: before
+            after_input,    # 입력창: after
+            alpha_input,    # 입력창: alpha
 
-            # 실행 버튼 (가운데 정렬)
             ft.Row(
                 controls=[
                     home_style_button("Run", ft.icons.PLAY_ARROW, run_test)
@@ -91,13 +109,11 @@ def paired_view(page: ft.Page):
                 alignment=ft.MainAxisAlignment.CENTER
             ),
 
-            # 결과 출력 (가운데 정렬된 카드 형태 + 복사 버튼 포함)
             ft.Row(
                 controls=[result_card],
                 alignment=ft.MainAxisAlignment.CENTER
             ),
 
-            # 뒤로가기 버튼 (통일된 스타일)
             ft.Row(
                 controls=[
                     home_style_button("Back", ft.icons.ARROW_BACK, lambda e: page.go("/statistics"))

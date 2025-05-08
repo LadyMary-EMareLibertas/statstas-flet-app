@@ -59,12 +59,14 @@ def statistics_view(page: ft.Page):
 
     # 전체 통계 도구 라벨 리스트 (접이식 뷰 및 클립보드용)
     tool_descriptions = [
-        "- Paired t-test (two-tailed)",
-        "- Paired t-test (one-tailed)",
-        "- Independent t-test (two-tailed)",
-        "- Independent t-test (one-tailed)",
-        "- One-sample t-test (two-tailed)",
-        "- One-sample t-test (one-tailed)",
+        "-t-test list",
+        "Paired t-test (two-tailed)",
+        "Paired t-test (one-tailed)",
+        "Independent t-test (two-tailed)",
+        "Independent t-test (one-tailed)",
+        "One-sample t-test (two-tailed)",
+        "One-sample t-test (one-tailed)",
+        "🚨 Can't find what you need? Email me at eugenemariastas@gmial.com 🚨"
     ]
     clipboard_text = "\n".join(tool_descriptions)
 
@@ -108,23 +110,16 @@ def statistics_view(page: ft.Page):
     request_section = ft.Column([
         ft.Divider(),  # 시각적 구분선
         ft.Text(
-            "Need a tool that's not listed? Got a question?",
-            size=16,
-            weight=ft.FontWeight.BOLD,
-            color=ft.colors.BLUE_GREY_800
-        ),
-        ft.Text(
-            "Let us know! We'll add more tools based on your needs.",
-            size=14,
+            "Can't find what you need? Contact me below.",
+            size=12,
             color=ft.colors.GREY_600
         ),
         ft.Row([
-            ft.Text("Email: ", size=14, color=ft.colors.GREY_700),
+            ft.Text("Email: ", size=12, color=ft.colors.GREY_600),
             ft.Text(
                 "eugenemariastas@gamil.com",
-                size=14,
-                weight=ft.FontWeight.BOLD,
-                color=ft.colors.BLUE_700
+                size=12,
+                color=ft.colors.GREY_600
             ),
             copy_email_button
         ])

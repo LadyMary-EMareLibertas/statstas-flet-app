@@ -30,9 +30,18 @@ def table_editor_view(page: ft.Page):
                 top = (row_idx == 0 or row_idx == 2 or (row_idx == 1 and col_idx in {2, 3, 4, 5}))
                 bottom = (row_idx == 5)
 
+                is_last_row = (row_idx == len(table_data) - 1)
+                if is_last_row:
+                    top = False
+                    bottom = False
+                    border_color = ft.colors.WHITE
+                    editable = True  # 마지막 줄도 수정 가능하게
+                else:
+                    border_color = ft.colors.BLACK
+
                 border = ft.border.only(
-                    top=ft.BorderSide(1, ft.colors.BLACK) if top else None,
-                    bottom=ft.BorderSide(1, ft.colors.BLACK) if bottom else None
+                    top=ft.BorderSide(1, border_color) if top else None,
+                    bottom=ft.BorderSide(1, border_color) if bottom else None
                 )
 
                 if editable:
@@ -43,9 +52,9 @@ def table_editor_view(page: ft.Page):
                         width=95,
                         text_align=align,
                         text_size=13,
-                        border=ft.InputBorder.NONE,  # ✅ 테두리 제거
-                        filled=False,                # ✅ 배경 제거
-                        bgcolor=None,                # ✅ 완전 투명화
+                        border=ft.InputBorder.NONE,
+                        filled=False,
+                        bgcolor=None,
                         on_change=make_on_change(row_idx, col_idx)
                     )
                 else:

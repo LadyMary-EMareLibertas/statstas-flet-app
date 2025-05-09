@@ -1,12 +1,18 @@
 import flet as ft
-from core.table_logic import get_default_table
+from core.table_logic import get_default_table, update_cell
 
-# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 제외)
+# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 포함, 템플릿은 고정)
 table_data = get_default_table()
 
 def table_editor_view(page: ft.Page):
     def build_template_table():
         rows = []
+
+        def make_on_change(i, j):
+            def handler(e):
+                update_cell(table_data, i, j, e.control.value)
+                page.update()
+            return handler
 
         for row_idx, row in enumerate(table_data):
             cells = []
@@ -20,20 +26,30 @@ def table_editor_view(page: ft.Page):
                 else:
                     align = ft.TextAlign.START
 
-                # 🔷 조건에 따라 테두리 적용
-                top = (
-                    row_idx == 0 or
-                    row_idx == 2 or
-                    (row_idx == 1 and col_idx in {2, 3, 4, 5})  # M, SD, M, SD 위 선
-                )
-                bottom = (row_idx == 5)  # Row4 아래 (주석 위)에만 하단 테두리
+                editable = cell.get("editable", True)
+                top = (row_idx == 0 or row_idx == 2 or (row_idx == 1 and col_idx in {2, 3, 4, 5}))
+                bottom = (row_idx == 5)
 
                 border = ft.border.only(
                     top=ft.BorderSide(1, ft.colors.BLACK) if top else None,
                     bottom=ft.BorderSide(1, ft.colors.BLACK) if bottom else None
                 )
 
-                content = ft.Text(val, text_align=align, size=13)
+                if editable:
+                    content = ft.TextField(
+                        value=val,
+                        dense=True,
+                        height=36,
+                        width=95,
+                        text_align=align,
+                        text_size=13,
+                        border=ft.InputBorder.NONE,  # ✅ 테두리 제거
+                        filled=False,                # ✅ 배경 제거
+                        bgcolor=None,                # ✅ 완전 투명화
+                        on_change=make_on_change(row_idx, col_idx)
+                    )
+                else:
+                    content = ft.Text(val, text_align=align, size=13)
 
                 cells.append(
                     ft.Container(

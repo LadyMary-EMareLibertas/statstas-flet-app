@@ -114,12 +114,12 @@ def table_editor_view(page: ft.Page):
     def build_mode_buttons():
         return ft.Row([
             ft.ElevatedButton(
-                "📝 Edit Text",
+                "Edit Text",
                 on_click=enable_text_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "text" else ft.colors.GREY_200)
             ),
             ft.ElevatedButton(
-                "🖐️ Edit Structure",
+                "Edit Structure",
                 on_click=enable_structure_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "structure" else ft.colors.GREY_200)
             )
@@ -150,7 +150,10 @@ def table_editor_view(page: ft.Page):
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
-            ft.Text("📋 APA Table Editor", size=24, weight=ft.FontWeight.BOLD),
+            ft.Text("APA Table Editor", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
+            ft.Text("StatStas does not support font settings or text alignment.\n"
+    "Please export your table to Word and complete the final formatting there.\n"
+    "Lines that look slightly misaligned in the editor will be cleanly aligned in the exported document.", size=12, color=ft.colors.GREY_600, italic=True),
             ft.Container(height=12),
             mode_buttons,
             *tools_column,

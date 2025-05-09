@@ -1,10 +1,12 @@
 import flet as ft
 from core.table_logic import get_default_table, update_cell
 
-# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 포함, 템플릿은 고정)
-table_data = get_default_table()
+# ✅ View 내부 상태 초기화용 변수
+# (항상 최신 템플릿을 가져오도록 함)
 
 def table_editor_view(page: ft.Page):
+    table_data = get_default_table()
+
     def build_template_table():
         rows = []
 
@@ -16,6 +18,8 @@ def table_editor_view(page: ft.Page):
 
         for row_idx, row in enumerate(table_data):
             cells = []
+            is_last_row = (row_idx == len(table_data) - 1)
+
             for col_idx, cell in enumerate(row):
                 val = cell.get("value", "")
                 raw_align = cell.get("align", "left").strip().lower()
@@ -30,12 +34,11 @@ def table_editor_view(page: ft.Page):
                 top = (row_idx == 0 or row_idx == 2 or (row_idx == 1 and col_idx in {2, 3, 4, 5}))
                 bottom = (row_idx == 5)
 
-                is_last_row = (row_idx == len(table_data) - 1)
                 if is_last_row:
                     top = False
                     bottom = False
                     border_color = ft.colors.WHITE
-                    editable = True  # 마지막 줄도 수정 가능하게
+                    editable = (col_idx == 0)  # 마지막 줄: 첫 셀만 수정 가능
                 else:
                     border_color = ft.colors.BLACK
 
@@ -44,12 +47,17 @@ def table_editor_view(page: ft.Page):
                     bottom=ft.BorderSide(1, border_color) if bottom else None
                 )
 
+                # ✅ 병합처럼 보이게 첫 셀만 넓힘
+                width = 95
+                if is_last_row and col_idx == 0:
+                    width = 95 * len(row)
+
                 if editable:
                     content = ft.TextField(
                         value=val,
                         dense=True,
                         height=36,
-                        width=95,
+                        width=width,
                         text_align=align,
                         text_size=13,
                         border=ft.InputBorder.NONE,
@@ -64,7 +72,7 @@ def table_editor_view(page: ft.Page):
                     ft.Container(
                         content=content,
                         padding=ft.padding.symmetric(horizontal=4, vertical=2),
-                        width=95,
+                        width=width,
                         bgcolor=ft.colors.WHITE,
                         border=border
                     )
@@ -96,7 +104,7 @@ def table_editor_view(page: ft.Page):
             ft.ElevatedButton(
                 text="Back",
                 icon=ft.icons.ARROW_BACK,
-                on_click=lambda e: page.go("/"),
+                on_click=lambda e: (page.views.pop(), page.go("/")),
                 style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=20, vertical=12))
             )
         ]

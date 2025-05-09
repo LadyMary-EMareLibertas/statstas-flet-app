@@ -1,3 +1,4 @@
+from copy import deepcopy
 from core.table_logic import (
     add_row,
     add_column,
@@ -7,9 +8,11 @@ from core.table_logic import (
 def handle_add_row(table_data, selected_cell, table_column, build_table_rows, page):
     if selected_cell:
         i, _ = selected_cell
+        template_row = table_data[i]
     else:
         i = len(table_data) - 1
-    add_row(table_data, i)
+        template_row = table_data[i]
+    add_row(table_data, i, template_row=template_row)
     table_column.controls = build_table_rows()
     page.update()
 
@@ -25,9 +28,11 @@ def handle_delete_row(table_data, selected_cell, table_column, build_table_rows,
 def handle_add_column(table_data, selected_cell, table_column, build_table_rows, page):
     if selected_cell:
         _, j = selected_cell
+        template_column = [row[j] for row in table_data]
     else:
         j = len(table_data[0]) - 1 if table_data else 0
-    add_column(table_data, j)
+        template_column = [row[j] for row in table_data]
+    add_column(table_data, j, template_column=template_column)
     table_column.controls = build_table_rows()
     page.update()
 

@@ -1,32 +1,39 @@
 import flet as ft
 
-# 상태 변수
-active_cell = None  # 현재 텍스트 편집 중인 셀 (row, col)
-selected_borders = []  # 선택된 구조선 리스트
-
-def is_selected_border(i, j, direction):
+def is_selected_border(i, j, direction, selected_borders):
     return {"row": i, "col": j, "direction": direction} in selected_borders
 
 def border_key(i, j, direction):
     return {"row": i, "col": j, "direction": direction}
 
 def table_editor_view(page: ft.Page):
-    global active_cell
     table_data = [[{"value": f"R{r}C{c}"} for c in range(5)] for r in range(5)]
     table_column = ft.Column(spacing=0)
+    mode_buttons = ft.Container()
+    selected_borders = []
+    editing_mode = "structure"
 
-    def toggle_cell_action(i, j):
+    def enable_text_mode(e):
+        nonlocal editing_mode
+        editing_mode = "text"
+        mode_buttons.content = build_mode_buttons()
+        table_column.controls = build_table_rows()
+        page.update()
+
+    def enable_structure_mode(e):
+        nonlocal editing_mode
+        editing_mode = "structure"
+        mode_buttons.content = build_mode_buttons()
+        table_column.controls = build_table_rows()
+        page.update()
+
+    def toggle_border(i, j, direction):
         def handler(e):
-            global active_cell
-            if active_cell == (i, j):
-                key = border_key(i, j, "top")
-                if key in selected_borders:
-                    selected_borders.remove(key)
-                else:
-                    selected_borders.append(key)
-                active_cell = None
+            key = border_key(i, j, direction)
+            if key in selected_borders:
+                selected_borders.remove(key)
             else:
-                active_cell = (i, j)
+                selected_borders.append(key)
             table_column.controls = build_table_rows()
             page.update()
         return handler
@@ -45,48 +52,72 @@ def table_editor_view(page: ft.Page):
                 width = 85
 
                 key = border_key(i, j, "top")
-                if is_selected_border(i, j, "top"):
+                if is_selected_border(i, j, "top", selected_borders):
                     border = ft.border.only(top=ft.BorderSide(width=1, color=ft.colors.BLUE_600))
                 else:
                     border = ft.border.only(top=ft.BorderSide(width=0, color=ft.colors.TRANSPARENT))
 
-                if active_cell == (i, j):
+                if editing_mode == "text":
                     content = ft.TextField(
                         value=val,
                         text_size=12,
-                        height=24,
-                        content_padding=ft.padding.symmetric(horizontal=4, vertical=2),
+                        height=26,
+                        text_align=ft.TextAlign.LEFT,
+                        content_padding=ft.padding.symmetric(vertical=2, horizontal=4),
                         border=ft.InputBorder.NONE,
                         bgcolor=ft.colors.TRANSPARENT,
                         on_change=make_on_change(i, j),
-                        autofocus=True
+                        autofocus=False
                     )
-                else:
-                    content = ft.Text(val, size=12)
-
-                cell = ft.GestureDetector(
-                    on_tap=toggle_cell_action(i, j),
-                    content=ft.Container(
+                    cell = ft.Container(
                         width=width,
                         height=42,
                         bgcolor=ft.colors.WHITE,
                         border=border,
-                        alignment=ft.alignment.center,
+                        alignment=ft.alignment.center_left,
                         content=content
                     )
-                )
+                else:
+                    content = ft.Text(val, size=12)
+                    cell = ft.GestureDetector(
+                        on_tap=toggle_border(i, j, "top"),
+                        content=ft.Container(
+                            width=width,
+                            height=42,
+                            bgcolor=ft.colors.WHITE,
+                            border=border,
+                            alignment=ft.alignment.center_left,
+                            content=content
+                        )
+                    )
                 cells.append(cell)
             rows.append(ft.Row(controls=cells, spacing=0))
         return rows
 
+    def build_mode_buttons():
+        return ft.Row([
+            ft.ElevatedButton(
+                "\ud83d\udcdd \ud14d\uc2a4\ud2b8 \uc218\uc815\ud558\uae30",
+                on_click=enable_text_mode,
+                style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "text" else ft.colors.GREY_200)
+            ),
+            ft.ElevatedButton(
+                "\ud83d\udd90\ufe0f \uad6c\uc870 \uc218\uc815\ud558\uae30",
+                on_click=enable_structure_mode,
+                style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "structure" else ft.colors.GREY_200)
+            )
+        ], spacing=10)
+
+    mode_buttons.content = build_mode_buttons()
     table_column.controls = build_table_rows()
 
     return ft.View(
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
-            ft.Text("\ud83d\udccb APA Table Editor (토글 방식)", size=24, weight=ft.FontWeight.BOLD),
+            ft.Text("\ud83d\udccb APA Table Editor (\ubaa8\ub4dc \ubd84\ub958)", size=24, weight=ft.FontWeight.BOLD),
             ft.Container(height=12),
+            mode_buttons,
             ft.Container(
                 content=table_column,
                 padding=6,

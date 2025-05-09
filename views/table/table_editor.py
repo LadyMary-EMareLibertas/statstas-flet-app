@@ -1,7 +1,7 @@
 import flet as ft
 from core.table_logic import get_default_table, update_cell
 
-# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 포함, 가운데 정렬, 병합 시뮬레이션)
+# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 포함, 줄바꿈, 가운데 정렬, 병합 시뮬레이션)
 def table_editor_view(page: ft.Page):
     table_data = get_default_table()
 
@@ -20,7 +20,7 @@ def table_editor_view(page: ft.Page):
 
             for col_idx, cell in enumerate(row):
                 val = cell.get("value", "")
-                align = ft.TextAlign.CENTER
+                align = ft.TextAlign.START if is_last_row else ft.TextAlign.CENTER
 
                 editable = cell.get("editable", True)
                 top = (row_idx == 0 or row_idx == 2 or (row_idx == 1 and col_idx in {2, 3, 4, 5}))
@@ -66,7 +66,6 @@ def table_editor_view(page: ft.Page):
                         )
                         cells.append(cell_container)
                     else:
-                        # 나머지 셀은 숨김
                         cells.append(ft.Container(width=0, height=0))
                 else:
                     width = 85

@@ -1,9 +1,7 @@
 import flet as ft
 from core.table_logic import get_default_table, update_cell
 
-# ✅ View 내부 상태 초기화용 변수
-# (항상 최신 템플릿을 가져오도록 함)
-
+# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 포함, 줄바꿈 및 행 높이 연동)
 def table_editor_view(page: ft.Page):
     table_data = get_default_table()
 
@@ -38,7 +36,7 @@ def table_editor_view(page: ft.Page):
                     top = False
                     bottom = False
                     border_color = ft.colors.WHITE
-                    editable = (col_idx == 0)  # 마지막 줄: 첫 셀만 수정 가능
+                    editable = (col_idx == 0)
                 else:
                     border_color = ft.colors.BLACK
 
@@ -47,7 +45,6 @@ def table_editor_view(page: ft.Page):
                     bottom=ft.BorderSide(1, border_color) if bottom else None
                 )
 
-                # ✅ 병합처럼 보이게 첫 셀만 넓힘
                 width = 95
                 if is_last_row and col_idx == 0:
                     width = 95 * len(row)
@@ -55,9 +52,9 @@ def table_editor_view(page: ft.Page):
                 if editable:
                     content = ft.TextField(
                         value=val,
-                        dense=True,
-                        height=36,
-                        width=width,
+                        multiline=True,
+                        min_lines=1,
+                        max_lines=6,
                         text_align=align,
                         text_size=13,
                         border=ft.InputBorder.NONE,
@@ -73,12 +70,20 @@ def table_editor_view(page: ft.Page):
                         content=content,
                         padding=ft.padding.symmetric(horizontal=4, vertical=2),
                         width=width,
+                        expand=True,
                         bgcolor=ft.colors.WHITE,
-                        border=border
+                        border=border,
+                        alignment=ft.alignment.top_left
                     )
                 )
 
-            rows.append(ft.Container(content=ft.Row(controls=cells, spacing=0)))
+            row_container = ft.Row(
+                controls=cells,
+                spacing=0,
+                alignment=ft.MainAxisAlignment.START,
+                vertical_alignment=ft.CrossAxisAlignment.START
+            )
+            rows.append(ft.Container(content=row_container))
 
         return ft.Column(controls=rows, spacing=0)
 
@@ -104,7 +109,7 @@ def table_editor_view(page: ft.Page):
             ft.ElevatedButton(
                 text="Back",
                 icon=ft.icons.ARROW_BACK,
-                on_click=lambda e: (page.views.pop(), page.go("/")),
+                on_click=lambda e: page.go("/"),
                 style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=20, vertical=12))
             )
         ]

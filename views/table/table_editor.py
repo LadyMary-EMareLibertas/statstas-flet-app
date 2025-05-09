@@ -4,14 +4,12 @@ from core.table_logic import (
     get_default_table,
     update_cell,
     toggle_border_color,
-    add_row,
-    add_column,
-    toggle_border_thickness,
 )
 from views.table.table_style import (
     get_border_style,
     get_text_alignment,
 )
+from views.table.table_ui_logic import *
 
 def table_editor_view(page: ft.Page):
     table_data = get_default_table()
@@ -31,56 +29,6 @@ def table_editor_view(page: ft.Page):
         nonlocal editing_mode
         editing_mode = "structure"
         mode_buttons.content = build_mode_buttons()
-        table_column.controls = build_table_rows()
-        page.update()
-
-    def handle_add_row(e):
-        nonlocal selected_cell
-        if selected_cell:
-            i, _ = selected_cell
-        else:
-            i = len(table_data) - 1
-        add_row(table_data, i)
-        table_column.controls = build_table_rows()
-        page.update()
-
-    def handle_delete_row(e):
-        nonlocal selected_cell
-        if not selected_cell:
-            return
-        i, _ = selected_cell
-        if 0 <= i < len(table_data):
-            table_data.pop(i)
-        table_column.controls = build_table_rows()
-        page.update()
-
-    def handle_add_column(e):
-        nonlocal selected_cell
-        if selected_cell:
-            _, j = selected_cell
-        else:
-            j = len(table_data[0]) - 1 if table_data else 0
-        add_column(table_data, j)
-        table_column.controls = build_table_rows()
-        page.update()
-
-    def handle_delete_column(e):
-        nonlocal selected_cell
-        if not selected_cell:
-            return
-        _, j = selected_cell
-        if 0 <= j < len(table_data[0]):
-            for row in table_data:
-                row.pop(j)
-        table_column.controls = build_table_rows()
-        page.update()
-
-    def handle_toggle_bold(e):
-        nonlocal selected_cell
-        if not selected_cell:
-            return
-        i, j = selected_cell
-        toggle_border_thickness(table_data, i, j, direction="top")
         table_column.controls = build_table_rows()
         page.update()
 
@@ -185,15 +133,15 @@ def table_editor_view(page: ft.Page):
         tools_column.append(
             ft.Column([
                 ft.Row([
-                    ft.ElevatedButton("➕ Add Row", on_click=handle_add_row, style=ft.ButtonStyle(bgcolor=ft.colors.GREEN_100)),
-                    ft.ElevatedButton("➖ Delete Row", on_click=handle_delete_row, style=ft.ButtonStyle(bgcolor=ft.colors.RED_100)),
-                    ft.ElevatedButton("↩️ Undo", on_click=lambda e: None, style=ft.ButtonStyle(bgcolor=ft.colors.GREY_100)),
+                    ft.ElevatedButton("➕ Add Row", on_click=lambda e: handle_add_row(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("➖ Delete Row", on_click=lambda e: handle_delete_row(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("↩️ Undo", on_click=lambda e: None),
                 ], spacing=10),
                 ft.Row([
-                    ft.ElevatedButton("➕ Add Column", on_click=handle_add_column, style=ft.ButtonStyle(bgcolor=ft.colors.GREEN_100)),
-                    ft.ElevatedButton("➖ Delete Column", on_click=handle_delete_column, style=ft.ButtonStyle(bgcolor=ft.colors.RED_100)),
-                    ft.ElevatedButton("🔄 Reverse Undo", on_click=lambda e: None, style=ft.ButtonStyle(bgcolor=ft.colors.GREY_100)),
-                    ft.ElevatedButton("🔳 Toggle Bold Line", on_click=handle_toggle_bold, style=ft.ButtonStyle(bgcolor=ft.colors.GREY_300)),
+                    ft.ElevatedButton("➕ Add Column", on_click=lambda e: handle_add_column(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("➖ Delete Column", on_click=lambda e: handle_delete_column(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("🔄 Reverse Undo", on_click=lambda e: None),
+                    ft.ElevatedButton("🔳 Toggle Bold Line", on_click=lambda e: handle_toggle_bold(table_data, selected_cell, table_column, build_table_rows, page)),
                 ], spacing=10)
             ], spacing=10)
         )

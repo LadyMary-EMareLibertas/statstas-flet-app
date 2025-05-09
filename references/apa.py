@@ -1,5 +1,3 @@
-# references/apa.py
-
 def get_references_for_test(test_type: str, extra: list = []) -> str:
     """
     Return appropriate references for the given t-test type.

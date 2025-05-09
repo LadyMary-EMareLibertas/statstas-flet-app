@@ -1,49 +1,39 @@
 import flet as ft
+from core.table_logic import get_default_table
 
-# 🔷 APA 스타일 표 데이터 (이미지 기반 구조 반영)
-safe_table_data = [
-    ["Variable", "", "Visual", "", "Infrared", "", "F", "η"],
-    ["", "", "M", "SD", "M", "SD", "", ""],
-    ["Row 1", "", "3.6", ".49", "9.2", "1.02", "69.9***", ".12"],
-    ["Row 2", "", "2.4", ".67", "10.1", ".08", "42.7***", ".23"],
-    ["Row 3", "", "1.2", ".78", "3.6", ".46", "53.9***", ".34"],
-    ["Row 4", "", "0.8", ".93", "4.7", ".71", "21.1***", ".45"],
-    ["", "", "", "", "", "", "", ""]
-]
+# ✅ 텍스트만 보여주는 템플릿 뷰 버전 (수정 불가)
+table_data = get_default_table()
 
 def table_editor_view(page: ft.Page):
     def build_safe_table():
         rows = []
-        for row_idx, row in enumerate(safe_table_data):
+
+        for row_idx, row in enumerate(table_data):
             cells = []
-            for col_idx, val in enumerate(row):
-                align = ft.TextAlign.CENTER
-                if row_idx == 0 and col_idx in {2, 4}:
-                    weight = ft.FontWeight.BOLD
-                elif row_idx == 1:
-                    weight = ft.FontWeight.NORMAL
-                elif col_idx == 0:
-                    align = ft.TextAlign.START
-                    weight = ft.FontWeight.NORMAL
-                else:
+            for col_idx, cell in enumerate(row):
+                val = cell.get("value", "")
+                raw_align = cell.get("align", "left").strip().lower()
+                if raw_align == "center":
+                    align = ft.TextAlign.CENTER
+                elif raw_align == "right":
                     align = ft.TextAlign.END
-                    weight = ft.FontWeight.NORMAL
-
-                text = ft.Text(val, text_align=align, weight=weight, size=13)
-
-                # ✅ Visual(0,2), Infrared(0,4)에만 하단선
-                if row_idx == 0 and col_idx in {2, 4}:
-                    border = ft.border.only(bottom=ft.BorderSide(1, ft.colors.BLACK))
-                # ✅ 줄 1과 줄 6 (헤더와 맨 마지막)에도 선
-                elif row_idx == 1 or row_idx == 6:
-                    border = ft.border.only(bottom=ft.BorderSide(1, ft.colors.BLACK))
                 else:
-                    border = None
+                    align = ft.TextAlign.START
+
+                top = cell.get("border_top", False)
+                bottom = cell.get("border_bottom", False)
+
+                border = ft.border.only(
+                    top=ft.BorderSide(1, ft.colors.BLACK) if top else None,
+                    bottom=ft.BorderSide(1, ft.colors.BLACK) if bottom else None
+                )
+
+                content = ft.Text(val, text_align=align, size=13)
 
                 cells.append(
                     ft.Container(
-                        content=text,
-                        padding=ft.padding.symmetric(horizontal=6, vertical=4),
+                        content=content,
+                        padding=ft.padding.symmetric(horizontal=4, vertical=2),
                         width=95,
                         bgcolor=ft.colors.WHITE,
                         border=border
@@ -54,14 +44,6 @@ def table_editor_view(page: ft.Page):
                 content=ft.Row(controls=cells, spacing=0)
             )
             rows.append(row_container)
-
-        # 🔻 별도 주석 텍스트 (표 바깥)
-        rows.append(
-            ft.Container(
-                content=ft.Text("***p < .01.", size=12, italic=True),
-                padding=ft.padding.only(top=6)
-            )
-        )
 
         return ft.Column(controls=rows, spacing=0)
 
@@ -77,6 +59,13 @@ def table_editor_view(page: ft.Page):
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
+            ),
+            ft.Container(height=30),
+            ft.ElevatedButton(
+                text="Back",
+                icon=ft.icons.ARROW_BACK,
+                on_click=lambda e: page.go("/"),
+                style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=20, vertical=12))
             )
         ]
     )

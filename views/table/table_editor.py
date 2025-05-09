@@ -16,6 +16,7 @@ def table_editor_view(page: ft.Page):
     def enable_text_mode(e):
         nonlocal editing_mode
         editing_mode = "text"
+        selected_borders.clear()
         mode_buttons.content = build_mode_buttons()
         table_column.controls = build_table_rows()
         page.update()

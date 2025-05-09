@@ -1,89 +1,132 @@
-import os
-from docx import Document
-from docx.enum.table import WD_ALIGN_VERTICAL
-from docx.shared import Pt
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
+import flet as ft
+from core.table_logic import get_default_table, update_cell
+from core.table_exporter import export_table_to_word
 
-def set_apa_paragraph_style(paragraph):
-    paragraph.paragraph_format.line_spacing = Pt(12)
-    paragraph.paragraph_format.space_after = Pt(0)
-    run = paragraph.runs[0]
-    run.font.name = "Times New Roman"
-    run.font.size = Pt(11)
+def table_editor_view(page: ft.Page):
+    table_data = get_default_table()
 
-def set_cell_border_from_data(cell, border_top, border_bottom):
-    tc = cell._tc
-    tcPr = tc.get_or_add_tcPr()
-    tcBorders = OxmlElement('w:tcBorders')
+    def get_ft_color(color_str):
+        return ft.colors.BLACK if color_str == "black" else ft.colors.WHITE
 
-    def make_border_element(tag, border):
-        el = OxmlElement(tag)
-        el.set(qn('w:val'), 'single')
-        el.set(qn('w:sz'), str(border.get("thickness", 1) * 4))
-        el.set(qn('w:color'), "FFFFFF")  # 모든 선을 흰색으로 설정
-        return el
+    def build_template_table():
+        rows = []
 
-    if border_top:
-        tcBorders.append(make_border_element('w:top', border_top))
-    if border_bottom:
-        tcBorders.append(make_border_element('w:bottom', border_bottom))
+        def make_on_change(i, j):
+            def handler(e):
+                update_cell(table_data, i, j, e.control.value)
+                page.update()
+            return handler
 
-    tcPr.append(tcBorders)
+        for row_idx, row in enumerate(table_data):
+            cells = []
+            is_last_row = (row_idx == len(table_data) - 1)
 
-def export_table_to_word(table_data, filename="exports/table_export_test.docx"):
-    print("🟢 Export started...")
-    os.makedirs("exports", exist_ok=True)
+            for col_idx, cell in enumerate(row):
+                val = cell.get("value", "")
+                align = ft.TextAlign.START if is_last_row else ft.TextAlign.CENTER
+                editable = cell.get("editable", True)
 
-    doc = Document()
-    n_rows = len(table_data)
-    n_cols = len(table_data[0]) if n_rows > 0 else 0
+                top_border = cell.get("border_top", {"color": "white", "thickness": 0})
+                bottom_border = cell.get("border_bottom", {"color": "white", "thickness": 0})
 
-    table = doc.add_table(rows=n_rows, cols=n_cols)
-    table.autofit = True
+                border = ft.border.only(
+                    top=ft.BorderSide(width=top_border["thickness"], color=get_ft_color(top_border["color"]))
+                        if top_border["color"] != "white" else None,
+                    bottom=ft.BorderSide(width=bottom_border["thickness"], color=get_ft_color(bottom_border["color"]))
+                        if bottom_border["color"] != "white" else None
+                )
 
-    merge_tracker = [[False]*n_cols for _ in range(n_rows)]
+                visible = cell.get("visible", True)
+                if not visible:
+                    cells.append(ft.Container(width=0, height=0))
+                    continue
 
-    for i, row in enumerate(table_data):
-        for j, cell in enumerate(row):
-            if not cell.get("visible", True):
-                merge_tracker[i][j] = True
-                continue
+                width = cell.get("width", 85)
+                if is_last_row and col_idx == 0:
+                    width = 85 * len(row)
 
-            val = str(cell.get("value", ""))
-            doc_cell = table.cell(i, j)
-            doc_cell.text = val
+                content = ft.TextField(
+                    value=val,
+                    multiline=True,
+                    min_lines=1,
+                    max_lines=6,
+                    text_align=align,
+                    text_size=12,
+                    border=ft.InputBorder.NONE,
+                    filled=False,
+                    bgcolor=None,
+                    content_padding=ft.padding.symmetric(horizontal=1, vertical=0),
+                    on_change=make_on_change(row_idx, col_idx)
+                )
 
-            # 정렬
-            if val.replace(".", "", 1).isdigit():
-                doc_cell.paragraphs[0].alignment = 1  # CENTER
-            else:
-                doc_cell.paragraphs[0].alignment = 0  # LEFT
+                cell_container = ft.Container(
+                    content=content,
+                    padding=ft.padding.symmetric(horizontal=1, vertical=0),
+                    width=width,
+                    expand=True,
+                    bgcolor=ft.colors.WHITE,
+                    border=border,
+                    alignment=ft.alignment.top_left
+                )
+                cells.append(cell_container)
 
-            doc_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-            set_apa_paragraph_style(doc_cell.paragraphs[0])
+            row_container = ft.Row(
+                controls=cells,
+                spacing=0,
+                alignment=ft.MainAxisAlignment.START,
+                vertical_alignment=ft.CrossAxisAlignment.START
+            )
+            rows.append(ft.Container(content=row_container))
 
-            # 테두리 적용 - 모든 선을 흰색으로 고정
-            border_top = {"color": "white", "thickness": 1}
-            border_bottom = {"color": "white", "thickness": 1}
-            set_cell_border_from_data(doc_cell, border_top, border_bottom)
+        return ft.Column(controls=rows, spacing=0)
 
-    # 병합 셀 처리
-    for i, row in enumerate(table_data):
-        for j, cell in enumerate(row):
-            if cell.get("visible", True):
-                span = 1
-                for k in range(j + 1, n_cols):
-                    if not table_data[i][k].get("visible", True):
-                        span += 1
-                    else:
-                        break
-                if span > 1:
-                    merged_cell = table.cell(i, j)
-                    for merge_j in range(1, span):
-                        merged_cell = merged_cell.merge(table.cell(i, j + merge_j))
-                        merge_tracker[i][j + merge_j] = True
+    def handle_export(e):
+        try:
+            export_table_to_word(table_data)
+            page.snack_bar = ft.SnackBar(
+                ft.Text("✅ Word file exported successfully."),
+                open=True
+            )
+        except Exception as ex:
+            print("❌ Export error:", ex)
+            page.snack_bar = ft.SnackBar(
+                ft.Text("❌ Failed to export. Please try again."),
+                open=True
+            )
+        page.update()
 
-    doc.save(filename)
-    print(f"✅ Exported to {filename}")
-    os.system(f"open '{filename}'")
+    return ft.View(
+        route="/table",
+        scroll=ft.ScrollMode.AUTO,
+        controls=[
+            ft.Text(
+                "📋 APA Table Editor",
+                size=26,
+                weight=ft.FontWeight.BOLD,
+                color=ft.colors.CYAN_400
+            ),
+            ft.Container(height=12),
+            ft.Container(
+                content=build_template_table(),
+                padding=6,
+                bgcolor=ft.colors.WHITE,
+                border=ft.border.all(1, ft.colors.GREY_300),
+                border_radius=6
+            ),
+            ft.Container(height=16),
+            ft.Row([
+                ft.ElevatedButton(
+                    text="Export to Word",
+                    icon=ft.icons.DOWNLOAD,
+                    on_click=handle_export,
+                    style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=18, vertical=10))
+                ),
+                ft.ElevatedButton(
+                    text="Back to Home",
+                    icon=ft.icons.ARROW_BACK,
+                    on_click=lambda e: page.go("/"),
+                    style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=18, vertical=10))
+                )
+            ], alignment=ft.MainAxisAlignment.CENTER)
+        ]
+    )

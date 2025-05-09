@@ -52,8 +52,11 @@ def table_editor_view(page: ft.Page):
             cells = []
             for j, cell in enumerate(row):
                 if not cell.get("visible", True):
-                    cells.append(ft.Container(width=0, height=0))
-                    continue
+                    if editing_mode == "text" and cell.get("editable", False):
+                        pass  # 예외: 텍스트 수정 모드에서 수정 가능하면 보여줌
+                    else:
+                        cells.append(ft.Container(width=0, height=0))
+                        continue
 
                 val = cell.get("value", "")
                 width = cell.get("width", 85)

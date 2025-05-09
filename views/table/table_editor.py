@@ -151,11 +151,6 @@ def table_editor_view(page: ft.Page):
         scroll=ft.ScrollMode.AUTO,
         controls=[
             ft.Text("📋 APA Table Editor", size=24, weight=ft.FontWeight.BOLD),
-            ft.ElevatedButton(
-                "📤 Export to Word",
-                on_click=lambda e: export_table_to_word(table_data),
-                style=ft.ButtonStyle(bgcolor=ft.colors.CYAN_200)
-            ),
             ft.Container(height=12),
             mode_buttons,
             *tools_column,
@@ -165,6 +160,19 @@ def table_editor_view(page: ft.Page):
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
-            )
+            ),
+            ft.Row([
+                ft.ElevatedButton(
+                    "⬅️ Back",
+                    on_click=lambda e: page.go("/"),
+                    style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200)
+                ),
+                ft.Container(expand=True),
+                ft.ElevatedButton(
+                    "📤 Export to Word",
+                    on_click=lambda e: export_table_to_word(table_data),
+                    style=ft.ButtonStyle(bgcolor=ft.colors.CYAN_200)
+                )
+            ])
         ]
     )

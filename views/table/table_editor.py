@@ -1,93 +1,83 @@
 import flet as ft
-from core.table_logic import get_default_table, update_cell
-from core.table_exporter import export_table_to_word
+
+# 상태 변수
+active_cell = None  # 현재 텍스트 편집 중인 셀 (row, col)
+selected_borders = []  # 선택된 구조선 리스트
+
+def is_selected_border(i, j, direction):
+    return {"row": i, "col": j, "direction": direction} in selected_borders
+
+def border_key(i, j, direction):
+    return {"row": i, "col": j, "direction": direction}
 
 def table_editor_view(page: ft.Page):
-    table_data = get_default_table()
-    selected_borders = []
+    global active_cell
+    table_data = [[{"value": f"R{r}C{c}"} for c in range(5)] for r in range(5)]
     table_column = ft.Column(spacing=0)
 
-    def get_ft_color(color_str):
-        return ft.colors.BLACK if color_str == "black" else ft.colors.WHITE
-
-    def is_selected_border(i, j, direction):
-        return {"row": i, "col": j, "direction": direction} in selected_borders
-
-    def select_border(i, j, direction="top"):
+    def toggle_cell_action(i, j):
         def handler(e):
-            border = {"row": i, "col": j, "direction": direction}
-            if border in selected_borders:
-                selected_borders.remove(border)
+            global active_cell
+            if active_cell == (i, j):
+                key = border_key(i, j, "top")
+                if key in selected_borders:
+                    selected_borders.remove(key)
+                else:
+                    selected_borders.append(key)
+                active_cell = None
             else:
-                selected_borders.append(border)
-            print("🔵 Selected borders:", selected_borders)
+                active_cell = (i, j)
             table_column.controls = build_table_rows()
             page.update()
         return handler
 
+    def make_on_change(i, j):
+        def handler(e):
+            table_data[i][j]["value"] = e.control.value
+        return handler
+
     def build_table_rows():
         rows = []
-        for row_idx, row in enumerate(table_data):
+        for i, row in enumerate(table_data):
             cells = []
-            for col_idx, cell in enumerate(row):
-                val = cell.get("value", "") or "\u200B"
-                visible = cell.get("visible", True)
-                width = cell.get("width", 85)
-                highlight_height = 6
+            for j, cell in enumerate(row):
+                val = cell.get("value", "")
+                width = 85
 
-                if not visible:
-                    cells.append(ft.Container(width=0, height=0))
-                    continue
+                key = border_key(i, j, "top")
+                if is_selected_border(i, j, "top"):
+                    border = ft.border.only(top=ft.BorderSide(width=1, color=ft.colors.BLUE_600))
+                else:
+                    border = ft.border.only(top=ft.BorderSide(width=0, color=ft.colors.TRANSPARENT))
 
-                top_border = cell.get("border_top", {"color": "white", "thickness": 0})
-                bottom_border = cell.get("border_bottom", {"color": "white", "thickness": 0})
-
-                border = ft.border.only(
-                    top=ft.BorderSide(width=1, color=get_ft_color(top_border["color"])),
-                    bottom=ft.BorderSide(width=1, color=get_ft_color(bottom_border["color"]))
-                )
-
-                highlight_bar = ft.Container(
-                    width=width,
-                    height=highlight_height,
-                    bgcolor=ft.colors.BLUE_600 if is_selected_border(row_idx, col_idx, "top") else ft.colors.TRANSPARENT,
-                    opacity=0.6
-                )
+                if active_cell == (i, j):
+                    content = ft.TextField(
+                        value=val,
+                        text_size=12,
+                        height=24,
+                        content_padding=ft.padding.symmetric(horizontal=4, vertical=2),
+                        border=ft.InputBorder.NONE,
+                        bgcolor=ft.colors.TRANSPARENT,
+                        on_change=make_on_change(i, j),
+                        autofocus=True
+                    )
+                else:
+                    content = ft.Text(val, size=12)
 
                 cell = ft.GestureDetector(
-                    on_tap=select_border(row_idx, col_idx, "top"),
+                    on_tap=toggle_cell_action(i, j),
                     content=ft.Container(
                         width=width,
-                        height=36,
-                        padding=ft.padding.only(top=0),
+                        height=42,
                         bgcolor=ft.colors.WHITE,
                         border=border,
-                        alignment=ft.alignment.top_center,
-                        content=ft.Column([
-                            highlight_bar,
-                            ft.Text(val, size=12)
-                        ])
+                        alignment=ft.alignment.center,
+                        content=content
                     )
                 )
-
                 cells.append(cell)
             rows.append(ft.Row(controls=cells, spacing=0))
         return rows
-
-    def handle_export(e):
-        try:
-            export_table_to_word(table_data)
-            page.snack_bar = ft.SnackBar(
-                ft.Text("✅ Word file exported successfully."),
-                open=True
-            )
-        except Exception as ex:
-            print("❌ Export error:", ex)
-            page.snack_bar = ft.SnackBar(
-                ft.Text("❌ Failed to export. Please try again."),
-                open=True
-            )
-        page.update()
 
     table_column.controls = build_table_rows()
 
@@ -95,7 +85,7 @@ def table_editor_view(page: ft.Page):
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
-            ft.Text("📋 APA Table Editor", size=26, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
+            ft.Text("\ud83d\udccb APA Table Editor (토글 방식)", size=24, weight=ft.FontWeight.BOLD),
             ft.Container(height=12),
             ft.Container(
                 content=table_column,
@@ -103,21 +93,6 @@ def table_editor_view(page: ft.Page):
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
-            ),
-            ft.Container(height=16),
-            ft.Row([
-                ft.ElevatedButton(
-                    text="Export to Word",
-                    icon=ft.icons.DOWNLOAD,
-                    on_click=handle_export,
-                    style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=18, vertical=10))
-                ),
-                ft.ElevatedButton(
-                    text="Back to Home",
-                    icon=ft.icons.ARROW_BACK,
-                    on_click=lambda e: page.go("/"),
-                    style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=18, vertical=10))
-                )
-            ], alignment=ft.MainAxisAlignment.CENTER)
+            )
         ]
     )

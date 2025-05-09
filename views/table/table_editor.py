@@ -1,11 +1,9 @@
 import flet as ft
-
 from core.table_logic import (
     get_default_table,
     update_cell,
     toggle_border_color,
 )
-
 from views.table.table_style import (
     get_border_style,
     get_text_alignment,
@@ -35,6 +33,8 @@ def table_editor_view(page: ft.Page):
     def handle_border_toggle(i, j):
         def handler(e):
             nonlocal selected_cell
+            if editing_mode != "structure":
+                return
             selected_cell = (i, j)
             toggle_border_color(table_data, i, j, direction="top")
             table_column.controls = build_table_rows()

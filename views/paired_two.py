@@ -1,21 +1,24 @@
 import flet as ft
 import numpy as np
-from core.ttest_logic import run_paired_ttest  # 핵심 계산 함수
+from core.ttest_logic import run_paired_ttest, compute_sd
 
+# Paired t-test 결과 화면 View 정의 함수
 def paired_view(page: ft.Page):
-    # ✅ 입력 필드 정의
+    # 🔷 사용자 입력 필드 정의
     before_input = ft.TextField(label="Before (comma-separated)", hint_text="e.g., 100, 102, 98")
     after_input = ft.TextField(label="After (comma-separated)", hint_text="e.g., 105, 100, 99")
     alpha_input = ft.TextField(label="Alpha", value="0.05")
 
+    # 🔷 입력 필드들을 수직으로 배치
     input_fields = ft.Column(
         controls=[before_input, after_input, alpha_input],
         spacing=16
     )
 
-    # ✅ 결과 텍스트 및 카드
+    # 🔷 결과 출력용 텍스트 정의
     result_text = ft.Text("", no_wrap=False, selectable=True)
 
+    # 🔷 결과 카드 UI 정의 (출력 + 복사 버튼 포함)
     result_card = ft.Container(
         content=ft.Column(
             controls=[
@@ -48,31 +51,78 @@ def paired_view(page: ft.Page):
         visible=False
     )
 
-    # ✅ Run 버튼 클릭 시 실행 함수
+    # 🔷 실행 버튼 클릭 시 통계 분석 실행 함수
     def run_test(e):
         try:
+            # 입력값 파싱
             before = list(map(float, before_input.value.split(",")))
             after = list(map(float, after_input.value.split(",")))
             alpha = float(alpha_input.value)
 
+            # t-test 실행
             result = run_paired_ttest(before, after, alpha, return_dict=True)
+            sd_before = compute_sd(before)
+            sd_after = compute_sd(after)
 
+            text = ""
+            # 🔸 에러 발생 시 출력 처리
             if result["error"]:
-                result_text.value = result["error"]
-                result_card.border = ft.border.all(1, ft.colors.RED_ACCENT_400)
-            else:
-                # ✅ 출력 조립
-                text = (
-                    f"🔍 Paired T-test ({result['tail']}-tailed)\n"
-                    + (f"- Direction: {result['direction']}\n" if result["direction"] else "")
-                    + f"- t({result['df']}) = {result['t_stat']:.3f}\n"
-                    + f"- p = {result['p']:.4f}\n"
-                    + f"- Critical value = {result['crit']:.3f} (α = {result['alpha']})\n"
-                    + f"- Cohen's d = {result['cohen_d']} ({result['cohen_d_interp']})\n"
-                    + f"- Result: {result['sig']}"
+                text = result["error"] + "\n"
+                if "normality" in result:
+                    norm = result["normality"]
+                    text += (
+                        "\nNormality Test on Differences (after - before):\n"
+                        "-----------------------------------------------------------------------------\n"
+                        f"Shapiro-Wilk:        {'passed' if norm['shapiro_pass'] else 'failed'} (p = {norm['shapiro_p']:.4f})\n"
+                        f"Kolmogorov-Smirnov:  {'passed' if norm['ks_pass'] else 'failed'} (p = {norm['ks_p']:.4f})\n"
+                        f"Anderson-Darling:    {'passed' if norm['ad_pass'] else 'failed'} (stat = {norm['ad_stat']:.4f}, crit = {norm['ad_crit']:.4f})"
+                    )
+
+                # 참고문헌 추가
+                text += (
+                    "\n\nReferences (APA 7th Edition):\n"
+                    "Gosset, W. S. (1908). The probable error of a mean.\n"
+                    "Biometrika, 6(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n\n"
+                    "Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.\n"
+                    "Nature Methods, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2\n"
+                    "-----------------------------------------------------------------------------"
                 )
 
-                # ✅ 무한대 경고 추가
+                result_text.value = text
+                result_card.border = ft.border.all(1, ft.colors.RED_ACCENT_400)
+
+            else:
+                # 🔸 정상 결과 출력 조립
+                text = f"""Paired t-test ({result['tail']}-tailed) result:
+==========================================================
+
+Normality Test on Differences (after - before):
+-----------------------------------------------------------------------------
+Shapiro-Wilk:        {'passed' if result['normality']['shapiro_pass'] else 'failed'} (p = {result['normality']['shapiro_p']:.4f})
+Kolmogorov-Smirnov:  {'passed' if result['normality']['ks_pass'] else 'failed'} (p = {result['normality']['ks_p']:.4f})
+Anderson-Darling:    {'passed' if result['normality']['ad_pass'] else 'failed'} (stat = {result['normality']['ad_stat']:.4f}, crit = {result['normality']['ad_crit']:.4f})
+
+Normality assumption met (at least 1 test passed). Proceeding to t-test...
+
+T-test Result:
+-----------------------------------------------------------------------------
+t({result['df']}) = {result['t_stat']:.3f}
+p-value = {result['p']:.4f} ({result['tail']}-tailed)
+Critical value = ±{result['crit']:.3f} (α = {result['alpha']})
+Cohen’s d = {result['cohen_d']} ({result['cohen_d_interp']})
+Test Result = {"significant" if "Significant" in result['sig'] else "not significant"}
+SD(before) = {sd_before}
+SD(after) = {sd_after}
+-----------------------------------------------------------------------------"""
+
+                # df ≤ 1 경고
+                if result["df"] <= 1:
+                    text += (
+                        "\n⚠️ Note: Sample size is extremely small (df ≤ 1). "
+                        "Interpretation of p-value and t-statistic may not be reliable."
+                    )
+
+                # ∞ 경고
                 if np.isinf(result["t_stat"]) or np.isinf(result["cohen_d"]):
                     text += (
                         "\n⚠️ Note: All differences were identical. "
@@ -80,9 +130,17 @@ def paired_view(page: ft.Page):
                         "Interpretation requires caution."
                     )
 
-                result_text.value = text
+                # 참고문헌 추가
+                text += (
+                    "\n\nReferences (APA 7th Edition):\n"
+                    "Gosset, W. S. (1908). The probable error of a mean.\n"
+                    "Biometrika, 6(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n\n"
+                    "Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.\n"
+                    "Nature Methods, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2\n"
+                    "-----------------------------------------------------------------------------"
+                )
 
-                # ✅ 테두리 색상 조정
+                result_text.value = text
                 if "Not Significant" in result["sig"]:
                     result_card.border = ft.border.all(1, ft.colors.RED_ACCENT_400)
                 else:
@@ -97,7 +155,7 @@ def paired_view(page: ft.Page):
 
         page.update()
 
-    # ✅ 공통 버튼 스타일 함수
+    # 🔷 공통 버튼 생성 함수
     def home_style_button(text, icon, on_click):
         return ft.ElevatedButton(
             text=text,
@@ -111,6 +169,7 @@ def paired_view(page: ft.Page):
             on_click=on_click
         )
 
+    # 🔷 최종 View 반환
     return ft.View(
         route="/paired_two",
         scroll=ft.ScrollMode.AUTO,
@@ -121,7 +180,7 @@ def paired_view(page: ft.Page):
                 weight=ft.FontWeight.BOLD,
                 color=ft.colors.CYAN_400
             ),
-            ft.Container(padding=ft.padding.only(bottom=40)),  # 헤더 아래 간격
+            ft.Container(padding=ft.padding.only(bottom=40)),
             input_fields,
             ft.Row(
                 controls=[home_style_button("Run", ft.icons.PLAY_ARROW, run_test)],

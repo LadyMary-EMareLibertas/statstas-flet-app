@@ -2,28 +2,33 @@ import flet as ft
 import difflib
 from data.stat_tests import stat_tests  # 통계 테스트 정의된 리스트 불러오기
 
+# 통계 도구 선택 화면 View 정의 함수
 def statistics_view(page: ft.Page):
-    suggestions = ft.Column()  # 검색 결과 버튼 리스트가 여기에 동적으로 추가됨
+    # 🔷 검색 결과로 보여줄 버튼 리스트 담을 컬럼
+    suggestions = ft.Column()
 
+    # 🔷 라우트 이동용 핸들러 생성 함수
     def go_to_route(route):
         def handler(e):
             page.go(route)
         return handler
 
+    # 🔷 검색창 입력 시 호출되는 핸들러 함수
     def search_handler(e):
         query = e.control.value.strip().lower()
-        suggestions.controls.clear()
+        suggestions.controls.clear()  # 기존 검색 결과 초기화
 
         if query == "":
             page.update()
             return
 
-        labels = [t["label"] for t in stat_tests]
+        labels = [t["label"] for t in stat_tests]  # 전체 검색 가능한 라벨 리스트
         matches = difflib.get_close_matches(query, labels, n=5, cutoff=0.2)
 
         if not matches:
             matches = [label for label in labels if query in label.lower()]
 
+        # 검색 결과에 맞는 버튼 동적으로 생성
         for match in matches:
             test = next((t for t in stat_tests if t["label"] == match), None)
             if test:
@@ -39,15 +44,15 @@ def statistics_view(page: ft.Page):
                 )
         page.update()
 
-    # ✅ 시그마 로고 (검색창 왼쪽에 배치)
+    # 🔶 시그마 로고 (검색창 왼쪽에 배치)
     sigma_logo = ft.Text(
-        "Σ",
+        "Σ",  # 그리스 문자 시그마, 수학/통계 상징
         size=36,
         weight=ft.FontWeight.BOLD,
         color=ft.colors.CYAN_600
     )
 
-    # ✅ 검색 입력창
+    # 🔶 검색 입력 필드 정의
     search_input = ft.TextField(
         hint_text="Search statistical tools...",
         on_change=search_handler,
@@ -62,14 +67,14 @@ def statistics_view(page: ft.Page):
         width=460
     )
 
-    # ✅ 검색창과 시그마 로고를 함께 정렬
+    # 🔶 로고와 입력 필드를 가로로 배치한 Row
     search_row = ft.Row(
         controls=[sigma_logo, search_input],
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=12
     )
 
-    # ✅ 전체 검색 영역 컨테이너
+    # 🔶 검색창 전체를 감싸는 컨테이너
     search_container = ft.Container(
         alignment=ft.alignment.center,
         padding=ft.padding.only(top=80, bottom=20),
@@ -83,7 +88,7 @@ def statistics_view(page: ft.Page):
         )
     )
 
-    # ✅ 도구 설명 리스트 (표시 및 복사용)
+    # 🔷 도구 설명 문자열 리스트
     tool_descriptions = [
         "- Paired t-test (two-tailed)",
         "- Paired t-test (one-tailed)",
@@ -92,8 +97,9 @@ def statistics_view(page: ft.Page):
         "- One-sample t-test (two-tailed)",
         "- One-sample t-test (one-tailed)"
     ]
-    clipboard_text = "\n".join(tool_descriptions)
+    clipboard_text = "\n".join(tool_descriptions)  # 복사용 텍스트
 
+    # 🔷 공통 버튼 생성 함수
     def home_style_button(text, icon, on_click):
         return ft.ElevatedButton(
             text=text,
@@ -107,18 +113,21 @@ def statistics_view(page: ft.Page):
             on_click=on_click
         )
 
+    # 🔷 복사 버튼 생성
     copy_email_button = home_style_button(
         "Copy Email",
         ft.icons.CONTENT_COPY,
         lambda e: page.set_clipboard("eugenemariastas@gmail.com")
     )
 
+    # 🔷 뒤로 가기 버튼 생성
     back_button = home_style_button(
         "Back",
         ft.icons.ARROW_BACK,
         lambda e: page.go("/")
     )
 
+    # 🔷 도구 설명 텍스트 리스트 컴포넌트 생성
     tool_list_controls = [ft.Text(label, size=13, color=ft.colors.GREY_700) for label in tool_descriptions]
     tool_list_controls += [
         ft.Divider(),
@@ -135,11 +144,12 @@ def statistics_view(page: ft.Page):
         ])
     ]
 
+    # 🔷 도구 설명 접이식 패널 정의
     static_description = ft.ExpansionTile(
         title=ft.Text(
             "Currently available statistical tools",
             weight=ft.FontWeight.BOLD,
-            color=ft.colors.CYAN_400  # ✅ CYAN 톤 강조
+            color=ft.colors.CYAN_400
         ),
         subtitle=ft.Text(
             "Click to expand full list",
@@ -159,6 +169,7 @@ def statistics_view(page: ft.Page):
         ]
     )
 
+    # 🔷 최종 View 구성 반환
     return ft.View(
         route="/statistics",
         scroll=ft.ScrollMode.AUTO,

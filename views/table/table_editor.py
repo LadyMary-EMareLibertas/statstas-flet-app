@@ -1,10 +1,10 @@
 from core.table_exporter import export_table_to_word
 import flet as ft
 from core.table_logic import (
-    get_default_table,
     update_cell,
     toggle_border_color,
 )
+from core.table_template import get_default_table
 from views.table.table_style import (
     get_border_style,
     get_text_alignment,

@@ -1,3 +1,4 @@
+from core.table_exporter import export_table_to_word
 import flet as ft
 from core.table_logic import (
     get_default_table,
@@ -53,7 +54,7 @@ def table_editor_view(page: ft.Page):
             for j, cell in enumerate(row):
                 if not cell.get("visible", True):
                     if editing_mode == "text" and cell.get("editable", False):
-                        pass  # 예외: 텍스트 수정 모드에서 수정 가능하면 보여줌
+                        pass
                     else:
                         cells.append(ft.Container(width=0, height=0))
                         continue
@@ -112,12 +113,12 @@ def table_editor_view(page: ft.Page):
     def build_mode_buttons():
         return ft.Row([
             ft.ElevatedButton(
-                "📝 텍스트 수정하기",
+                "📝 Edit Text",
                 on_click=enable_text_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "text" else ft.colors.GREY_200)
             ),
             ft.ElevatedButton(
-                "🖐️ 구조 수정하기",
+                "🖐️ Edit Structure",
                 on_click=enable_structure_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "structure" else ft.colors.GREY_200)
             )
@@ -131,6 +132,11 @@ def table_editor_view(page: ft.Page):
         scroll=ft.ScrollMode.AUTO,
         controls=[
             ft.Text("📋 APA Table Editor", size=24, weight=ft.FontWeight.BOLD),
+            ft.ElevatedButton(
+                "📤 Export to Word",
+                on_click=lambda e: export_table_to_word(table_data),
+                style=ft.ButtonStyle(bgcolor=ft.colors.CYAN_200)
+            ),
             ft.Container(height=12),
             mode_buttons,
             ft.Container(

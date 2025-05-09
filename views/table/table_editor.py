@@ -5,9 +5,6 @@ from core.table_exporter import export_table_to_word
 def table_editor_view(page: ft.Page):
     table_data = get_default_table()
 
-    def get_ft_color(color_str):
-        return ft.colors.BLACK if color_str == "black" else ft.colors.WHITE
-
     def build_template_table():
         rows = []
 
@@ -26,14 +23,10 @@ def table_editor_view(page: ft.Page):
                 align = ft.TextAlign.START if is_last_row else ft.TextAlign.CENTER
                 editable = cell.get("editable", True)
 
-                top_border = cell.get("border_top", {"color": "white", "thickness": 0})
-                bottom_border = cell.get("border_bottom", {"color": "white", "thickness": 0})
-
+                # ✅ 모든 선을 흰색으로 설정
                 border = ft.border.only(
-                    top=ft.BorderSide(width=top_border["thickness"], color=get_ft_color(top_border["color"]))
-                        if top_border["color"] != "white" else None,
-                    bottom=ft.BorderSide(width=bottom_border["thickness"], color=get_ft_color(bottom_border["color"]))
-                        if bottom_border["color"] != "white" else None
+                    top=ft.BorderSide(width=1, color=ft.colors.WHITE),
+                    bottom=ft.BorderSide(width=1, color=ft.colors.WHITE)
                 )
 
                 visible = cell.get("visible", True)

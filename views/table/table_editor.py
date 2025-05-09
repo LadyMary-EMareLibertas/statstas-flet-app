@@ -1,22 +1,26 @@
 import flet as ft
 
-def is_selected_border(i, j, direction, selected_borders):
-    return {"row": i, "col": j, "direction": direction} in selected_borders
+from core.table_logic import (
+    get_default_table,
+    update_cell,
+    toggle_border_color,
+)
 
-def border_key(i, j, direction):
-    return {"row": i, "col": j, "direction": direction}
+from views.table.table_style import (
+    get_border_style,
+    get_text_alignment,
+)
 
 def table_editor_view(page: ft.Page):
-    table_data = [[{"value": f"R{r}C{c}"} for c in range(5)] for r in range(5)]
+    table_data = get_default_table()
     table_column = ft.Column(spacing=0)
     mode_buttons = ft.Container()
-    selected_borders = []
     editing_mode = "structure"
+    selected_cell = None
 
     def enable_text_mode(e):
         nonlocal editing_mode
         editing_mode = "text"
-        selected_borders.clear()
         mode_buttons.content = build_mode_buttons()
         table_column.controls = build_table_rows()
         page.update()
@@ -28,20 +32,18 @@ def table_editor_view(page: ft.Page):
         table_column.controls = build_table_rows()
         page.update()
 
-    def toggle_border(i, j, direction):
+    def handle_border_toggle(i, j):
         def handler(e):
-            key = border_key(i, j, direction)
-            if key in selected_borders:
-                selected_borders.remove(key)
-            else:
-                selected_borders.append(key)
+            nonlocal selected_cell
+            selected_cell = (i, j)
+            toggle_border_color(table_data, i, j, direction="top")
             table_column.controls = build_table_rows()
             page.update()
         return handler
 
     def make_on_change(i, j):
         def handler(e):
-            table_data[i][j]["value"] = e.control.value
+            update_cell(table_data, i, j, e.control.value)
         return handler
 
     def build_table_rows():
@@ -49,28 +51,35 @@ def table_editor_view(page: ft.Page):
         for i, row in enumerate(table_data):
             cells = []
             for j, cell in enumerate(row):
+                if not cell.get("visible", True):
+                    cells.append(ft.Container(width=0, height=0))
+                    continue
+
                 val = cell.get("value", "")
-                width = 85
+                width = cell.get("width", 85)
+                border_top = get_border_style(cell, "top")
+                border_bottom = get_border_style(cell, "bottom")
+                align = cell.get("align", "left")
+                editable = cell.get("editable", True)
 
-                key = border_key(i, j, "top")
-                if is_selected_border(i, j, "top", selected_borders):
-                    border = ft.border.only(top=ft.BorderSide(width=1, color=ft.colors.BLUE_600))
-                else:
-                    border = ft.border.only(top=ft.BorderSide(width=0, color=ft.colors.TRANSPARENT))
+                border = ft.border.only(
+                    top=ft.BorderSide(width=border_top["thickness"], color=getattr(ft.colors, border_top["color"].upper(), ft.colors.TRANSPARENT)),
+                    bottom=ft.BorderSide(width=border_bottom["thickness"], color=getattr(ft.colors, border_bottom["color"].upper(), ft.colors.TRANSPARENT))
+                )
 
-                if editing_mode == "text":
+                if editing_mode == "text" and editable:
                     content = ft.TextField(
                         value=val,
                         text_size=12,
                         height=26,
-                        text_align=ft.TextAlign.LEFT,
+                        text_align=get_text_alignment(align),
                         content_padding=ft.padding.symmetric(vertical=2, horizontal=4),
                         border=ft.InputBorder.NONE,
                         bgcolor=ft.colors.TRANSPARENT,
                         on_change=make_on_change(i, j),
                         autofocus=False
                     )
-                    cell = ft.Container(
+                    cell_container = ft.Container(
                         width=width,
                         height=42,
                         bgcolor=ft.colors.WHITE,
@@ -79,31 +88,33 @@ def table_editor_view(page: ft.Page):
                         content=content
                     )
                 else:
-                    content = ft.Text(val, size=12)
-                    cell = ft.GestureDetector(
-                        on_tap=toggle_border(i, j, "top"),
+                    content = ft.Text(val, size=12, text_align=get_text_alignment(align))
+                    is_selected = (editing_mode == "structure" and selected_cell == (i, j))
+                    cell_container = ft.GestureDetector(
+                        on_tap=handle_border_toggle(i, j),
                         content=ft.Container(
                             width=width,
                             height=42,
-                            bgcolor=ft.colors.WHITE,
+                            bgcolor=ft.colors.BLUE_100 if is_selected else ft.colors.WHITE,
                             border=border,
                             alignment=ft.alignment.center_left,
                             content=content
                         )
                     )
-                cells.append(cell)
+
+                cells.append(cell_container)
             rows.append(ft.Row(controls=cells, spacing=0))
         return rows
 
     def build_mode_buttons():
         return ft.Row([
             ft.ElevatedButton(
-                "\ud83d\udcdd \ud14d\uc2a4\ud2b8 \uc218\uc815\ud558\uae30",
+                "📝 텍스트 수정하기",
                 on_click=enable_text_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "text" else ft.colors.GREY_200)
             ),
             ft.ElevatedButton(
-                "\ud83d\udd90\ufe0f \uad6c\uc870 \uc218\uc815\ud558\uae30",
+                "🖐️ 구조 수정하기",
                 on_click=enable_structure_mode,
                 style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "structure" else ft.colors.GREY_200)
             )
@@ -116,7 +127,7 @@ def table_editor_view(page: ft.Page):
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
-            ft.Text("\ud83d\udccb APA Table Editor (\ubaa8\ub4dc \ubd84\ub958)", size=24, weight=ft.FontWeight.BOLD),
+            ft.Text("📋 APA Table Editor", size=24, weight=ft.FontWeight.BOLD),
             ft.Container(height=12),
             mode_buttons,
             ft.Container(

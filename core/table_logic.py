@@ -17,56 +17,51 @@ def cell(val, align="center", editable=True, top=False, bottom=False, width=85, 
 
 def get_default_table():
     return [
-        [  # 헤더 (병합 시뮬레이션)
-            cell("Variable", "left"),
-            cell("", visible=False),
-            cell("Visual", bottom=True, top=True, width=170),
-            cell("", visible=False),
-            cell("Infrared", bottom=True, top=True, width=170),
-            cell("", visible=False),
-            cell("F"),
-            cell("η")
-        ],
-        [  # M / SD 라벨 행
-            cell("", "left"),
-            cell("", visible=False),
-            cell("M", top=True, bottom=True),
-            cell("SD", top=True, bottom=True),
-            cell("M", top=True, bottom=True),
-            cell("SD", top=True, bottom=True),
-            cell("", top=True),
-            cell("", bottom=True)
-        ],
-        [  # 데이터 시작
-            cell("Row 1", "left"), cell(""),
-            cell("3.6", "right"), cell(".49", "right"),
-            cell("9.2", "right"), cell("1.02", "right"),
-            cell("69.9***", "right"), cell(".12", "right")
-        ],
-        [
-            cell("Row 2", "left"), cell(""),
-            cell("2.4", "right"), cell(".67", "right"),
-            cell("10.1", "right"), cell(".08", "right"),
-            cell("42.7***", "right"), cell(".23", "right")
-        ],
-        [
-            cell("Row 3", "left"), cell(""),
-            cell("1.2", "right"), cell(".78", "right"),
-            cell("3.6", "right"), cell(".46", "right"),
-            cell("53.9***", "right"), cell(".34", "right")
-        ],
-        [
-            cell("Row 4", "left"), cell(""),
-            cell("0.8", "right"), cell(".93", "right"),
-            cell("4.7", "right"), cell(".71", "right"),
-            cell("21.1***", "right"), cell(".45", "right")
-        ],
-        [  # 각주 (마지막 줄 병합)
-            cell("***p < .01.", "left", editable=False, width=680),
-            *[cell("", editable=False, visible=False) for _ in range(7)]
-        ]
+        [cell("", "left"), cell("M", bottom=True), cell("SD", bottom=True), cell("M", bottom=True),
+         cell("SD", bottom=True), cell("", bottom=True), cell("", bottom=True)],
+        [cell("Row 1", "left"), cell("3.6"), cell(".49"), cell("9.2"), cell("1.02"), cell("69.9***"), cell(".12")],
+        [cell("Row 2", "left"), cell("2.4"), cell(".67"), cell("10.1"), cell(".08"), cell("42.7***"), cell(".23")],
+        [cell("Row 3", "left"), cell("1.2"), cell(".78"), cell("3.6"), cell(".46"), cell("53.9***"), cell(".34")],
+        [cell("Row 4", "left"), cell("0.8"), cell(".93"), cell("4.7"), cell(".71"), cell("21.1***"), cell(".45", bottom=True)],
+        [cell("***p < .01.", "left", editable=False, width=680)] + [cell("", editable=False, visible=False) for _ in range(6)]
     ]
 
 def update_cell(data, row, col, new_value):
     data[row][col]["value"] = new_value
+    return data
+
+def toggle_border_color(data, row, col, direction="top"):
+    border_key = f"border_{direction}"
+    border = data[row][col].get(border_key, {"color": "white", "thickness": 1})
+    current = border.get("color", "white")
+    data[row][col][border_key] = {
+        "color": "black" if current == "white" else "white",
+        "thickness": border.get("thickness", 1)
+    }
+    return data
+
+def toggle_border_thickness(data, row, col, direction="top"):
+    """테두리 두께를 1 ↔ 2로 토글"""
+    border_key = f"border_{direction}"
+    border = data[row][col].get(border_key, {"color": "white", "thickness": 1})
+    current = border.get("thickness", 1)
+    data[row][col][border_key] = {
+        "color": border.get("color", "white"),
+        "thickness": 2 if current == 1 else 1
+    }
+    return data
+
+def add_row(data, row_index):
+    """선택된 인덱스 다음 위치에 행 삽입"""
+    if not data:
+        return data
+    num_cols = len(data[0])
+    new_row = [cell("", align="left") for _ in range(num_cols)]
+    data.insert(row_index + 1, new_row)
+    return data
+
+def add_column(data, col_index):
+    """선택된 인덱스 다음 위치에 열 삽입"""
+    for row in data:
+        row.insert(col_index + 1, cell("", align="left"))
     return data

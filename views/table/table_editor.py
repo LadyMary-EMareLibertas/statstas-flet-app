@@ -1,11 +1,11 @@
 import flet as ft
 from core.table_logic import get_default_table
 
-# ✅ 텍스트만 보여주는 템플릿 뷰 버전 (수정 불가)
+# ✅ 텍스트 기반 APA 스타일 테이블 뷰 (수정 기능 제외)
 table_data = get_default_table()
 
 def table_editor_view(page: ft.Page):
-    def build_safe_table():
+    def build_template_table():
         rows = []
 
         for row_idx, row in enumerate(table_data):
@@ -20,8 +20,9 @@ def table_editor_view(page: ft.Page):
                 else:
                     align = ft.TextAlign.START
 
-                top = cell.get("border_top", False)
-                bottom = cell.get("border_bottom", False)
+                # 🔷 조건에 따라 테두리 적용
+                top = (row_idx == 0 or row_idx == 2)  # 맨 위줄 + Row 1 위줄 상단 테두리
+                bottom = (row_idx == 5)  # Row4 아래 (주석 위)에만 하단 테두리
 
                 border = ft.border.only(
                     top=ft.BorderSide(1, ft.colors.BLACK) if top else None,
@@ -40,10 +41,7 @@ def table_editor_view(page: ft.Page):
                     )
                 )
 
-            row_container = ft.Container(
-                content=ft.Row(controls=cells, spacing=0)
-            )
-            rows.append(row_container)
+            rows.append(ft.Container(content=ft.Row(controls=cells, spacing=0)))
 
         return ft.Column(controls=rows, spacing=0)
 
@@ -51,10 +49,15 @@ def table_editor_view(page: ft.Page):
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
-            ft.Text("📋 APA Table Template", size=28, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
+            ft.Text(
+                "📋 APA Table Template",
+                size=28,
+                weight=ft.FontWeight.BOLD,
+                color=ft.colors.CYAN_400
+            ),
             ft.Container(height=20),
             ft.Container(
-                content=build_safe_table(),
+                content=build_template_table(),
                 padding=10,
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),

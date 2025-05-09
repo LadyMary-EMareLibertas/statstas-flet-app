@@ -21,7 +21,11 @@ def table_editor_view(page: ft.Page):
                     align = ft.TextAlign.START
 
                 # 🔷 조건에 따라 테두리 적용
-                top = (row_idx == 0 or row_idx == 2)  # 맨 위줄 + Row 1 위줄 상단 테두리
+                top = (
+                    row_idx == 0 or
+                    row_idx == 2 or
+                    (row_idx == 1 and col_idx in {2, 3, 4, 5})  # M, SD, M, SD 위 선
+                )
                 bottom = (row_idx == 5)  # Row4 아래 (주석 위)에만 하단 테두리
 
                 border = ft.border.only(

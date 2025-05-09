@@ -30,7 +30,14 @@ def table_editor_view(page: ft.Page):
         for row_idx, row in enumerate(table_data):
             cells = []
             for col_idx, cell in enumerate(row):
-                val = cell.get("value", "")
+                val = cell.get("value", "") or "\u200B"
+                visible = cell.get("visible", True)
+                width = cell.get("width", 85)
+                highlight_height = 6
+
+                if not visible:
+                    cells.append(ft.Container(width=0, height=0))
+                    continue
 
                 top_border = cell.get("border_top", {"color": "white", "thickness": 0})
                 bottom_border = cell.get("border_bottom", {"color": "white", "thickness": 0})
@@ -40,30 +47,29 @@ def table_editor_view(page: ft.Page):
                     bottom=ft.BorderSide(width=1, color=get_ft_color(bottom_border["color"]))
                 )
 
-                highlight = ft.Container(
-                    left=0,
-                    right=0,
-                    top=0,
-                    height=3,
-                    bgcolor=ft.colors.BLUE_200,
-                    opacity=0.4,
-                    visible=is_selected_border(row_idx, col_idx, "top")
+                highlight_bar = ft.Container(
+                    width=width,
+                    height=highlight_height,
+                    bgcolor=ft.colors.BLUE_600 if is_selected_border(row_idx, col_idx, "top") else ft.colors.TRANSPARENT,
+                    opacity=0.6
                 )
 
-                cell = ft.Stack([
-                    ft.Container(
-                        width=85,
+                cell = ft.GestureDetector(
+                    on_tap=select_border(row_idx, col_idx, "top"),
+                    content=ft.Container(
+                        width=width,
                         height=36,
+                        padding=ft.padding.only(top=0),
                         bgcolor=ft.colors.WHITE,
-                        alignment=ft.alignment.center,
                         border=border,
-                        content=ft.GestureDetector(
-                            on_tap=select_border(row_idx, col_idx, "top"),
-                            content=ft.Text(val, size=12)
-                        )
-                    ),
-                    highlight
-                ])
+                        alignment=ft.alignment.top_center,
+                        content=ft.Column([
+                            highlight_bar,
+                            ft.Text(val, size=12)
+                        ])
+                    )
+                )
+
                 cells.append(cell)
             rows.append(ft.Row(controls=cells, spacing=0))
         return rows

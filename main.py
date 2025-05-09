@@ -1,7 +1,16 @@
 import flet as ft
-from views.home import home_view                 
-from views.statistics import statistics_view    
-from views.paired_two import paired_view         
+
+# 홈 페이지
+from views.home.home import home_view
+
+# 통계 메뉴 페이지
+from views.statistics.statistics import statistics_view
+
+# t-test 분석 도구 (Paired t-test)
+from views.tools.t_test.paired_two import paired_view
+
+# 테이블 편집기 (APA 기본 템플릿)
+from views.table.table_editor import table_editor_view
 
 def main(page: ft.Page):
     # 페이지 제목 설정 (브라우저 탭이나 앱 상단에 표시됨)
@@ -16,13 +25,15 @@ def main(page: ft.Page):
         # 현재 페이지 뷰를 모두 초기화
         page.views.clear()
 
-        # 경로에 따라 각 뷰 함수 호출<< 여기만 바꿔주면 됨 
+        # 경로에 따라 각 뷰 함수 호출
         if route == "/":
             page.views.append(home_view(page))          # 홈 화면
         elif route == "/statistics":
             page.views.append(statistics_view(page))    # 통계 도구 검색 화면
         elif route == "/paired_two":
             page.views.append(paired_view(page))        # Paired t-test 실행 화면
+        elif route == "/table":
+            page.views.append(table_editor_view(page))   # 테이블 편집기 화면 (APA 템플릿 고정)
 
     # 페이지에 라우트 변경 이벤트 핸들러 연결
     page.on_route_change = route_change

@@ -58,9 +58,9 @@ def home_view(page: ft.Page):
 
                                 # ✅ 테이블 기능으로 이동 (예정)
                                 ft.ElevatedButton(
-                                    "Tables",
+                                    "Table",
                                     icon=ft.icons.TABLE_CHART,
-                                    on_click=lambda e: page.go("/tables")
+                                    on_click=lambda e: page.go("/table")
                                 ),
 
                                 # ✅ 그래프 기능으로 이동 (예정)

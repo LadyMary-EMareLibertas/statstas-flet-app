@@ -1,6 +1,7 @@
 import flet as ft
 import numpy as np
 from core.ttest_logic import run_paired_ttest, compute_sd
+from references.apa import get_references_for_test
 
 # Paired t-test 결과 화면 View 정의 함수
 def paired_view(page: ft.Page):
@@ -65,6 +66,7 @@ def paired_view(page: ft.Page):
             sd_after = compute_sd(after)
 
             text = ""
+
             # 🔸 에러 발생 시 출력 처리
             if result["error"]:
                 text = result["error"] + "\n"
@@ -75,24 +77,28 @@ def paired_view(page: ft.Page):
                         "-----------------------------------------------------------------------------\n"
                         f"Shapiro-Wilk:        {'passed' if norm['shapiro_pass'] else 'failed'} (p = {norm['shapiro_p']:.4f})\n"
                         f"Kolmogorov-Smirnov:  {'passed' if norm['ks_pass'] else 'failed'} (p = {norm['ks_p']:.4f})\n"
-                        f"Anderson-Darling:    {'passed' if norm['ad_pass'] else 'failed'} (stat = {norm['ad_stat']:.4f}, crit = {norm['ad_crit']:.4f})"
+                        f"Anderson-Darling:    {'passed' if norm['ad_pass'] else 'failed'} (stat = {norm['ad_stat']:.4f}, crit = {norm['ad_crit']:.4f})\n"
+                        "-----------------------------------------------------------------------------"
                     )
 
-                # 참고문헌 추가
-                text += (
-                    "\n\nReferences (APA 7th Edition):\n"
-                    "Gosset, W. S. (1908). The probable error of a mean.\n"
-                    "Biometrika, 6(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n\n"
-                    "Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.\n"
-                    "Nature Methods, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2\n"
-                    "-----------------------------------------------------------------------------"
-                )
-
-                result_text.value = text
+                text += "\n\n" + get_references_for_test("paired")
                 result_card.border = ft.border.all(1, ft.colors.RED_ACCENT_400)
 
             else:
                 # 🔸 정상 결과 출력 조립
+                test_result_label = (
+                    "significant" if result["sig"] == "Significant" else "not significant"
+                )
+
+                # 🔸 판정 이유 설명 (항상 출력)
+                reason = (
+                    f"Reason: The t-statistic ({result['t_stat']:.3f}) "
+                    f"{'exceeds' if result['sig'] == 'Significant' else 'does not exceed'} "
+                    f"the critical value (±{result['crit']:.3f}).\n"
+                    f"        The p-value ({result['p']:.4f}) is "
+                    f"{'less' if result['sig'] == 'Significant' else 'greater'} than the alpha level (α = {result['alpha']})."
+                )
+
                 text = f"""Paired t-test ({result['tail']}-tailed) result:
 ==========================================================
 
@@ -106,46 +112,39 @@ Normality assumption met (at least 1 test passed). Proceeding to t-test...
 
 T-test Result:
 -----------------------------------------------------------------------------
+Critical value = ±{result['crit']:.3f} (α = {result['alpha']})
 t({result['df']}) = {result['t_stat']:.3f}
 p-value = {result['p']:.4f} ({result['tail']}-tailed)
-Critical value = ±{result['crit']:.3f} (α = {result['alpha']})
+Test Result = {test_result_label}
+{reason}
 Cohen’s d = {result['cohen_d']} ({result['cohen_d_interp']})
-Test Result = {"significant" if "Significant" in result['sig'] else "not significant"}
 SD(before) = {sd_before}
 SD(after) = {sd_after}
 -----------------------------------------------------------------------------"""
 
-                # df ≤ 1 경고
                 if result["df"] <= 1:
                     text += (
                         "\n⚠️ Note: Sample size is extremely small (df ≤ 1). "
-                        "Interpretation of p-value and t-statistic may not be reliable."
+                        "Interpretation of p-value and t-statistic may not be reliable.\n"
+                        "-----------------------------------------------------------------------------"
                     )
 
-                # ∞ 경고
                 if np.isinf(result["t_stat"]) or np.isinf(result["cohen_d"]):
                     text += (
                         "\n⚠️ Note: All differences were identical. "
                         "Standard deviation is zero, so t and Cohen's d are undefined (∞). "
-                        "Interpretation requires caution."
+                        "Interpretation requires caution.\n"
+                        "-----------------------------------------------------------------------------"
                     )
 
-                # 참고문헌 추가
-                text += (
-                    "\n\nReferences (APA 7th Edition):\n"
-                    "Gosset, W. S. (1908). The probable error of a mean.\n"
-                    "Biometrika, 6(1), 1–25. https://doi.org/10.1093/biomet/6.1.1\n\n"
-                    "Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python.\n"
-                    "Nature Methods, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2\n"
-                    "-----------------------------------------------------------------------------"
-                )
+                text += "\n\n" + get_references_for_test("paired")
 
-                result_text.value = text
-                if "Not Significant" in result["sig"]:
+                if result["sig"] == "Not Significant":
                     result_card.border = ft.border.all(1, ft.colors.RED_ACCENT_400)
                 else:
                     result_card.border = ft.border.all(1, ft.colors.GREEN_ACCENT_400)
 
+            result_text.value = text
             result_card.visible = True
 
         except Exception as err:

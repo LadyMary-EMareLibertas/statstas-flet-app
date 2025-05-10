@@ -11,29 +11,28 @@ from table.logic.style import (
 )
 from table.logic.ui_state import *
 
+def table_editor_view(page: ft.Page):
+    table_data = get_default_table()
+    table_column = ft.Column(spacing=0)
+    mode_buttons = ft.Container()
+    editing_mode = "structure"
+    selected_cell = None
 
-def table_editor_view(page: ft.Page):  # 메인 테이블 편집기 뷰 함수
-    table_data = get_default_table()  # 표 데이터 구조 초기화
-    table_column = ft.Column(spacing=0)  # 테이블 행들을 수직으로 배치할 컬럼
-    mode_buttons = ft.Container()  # 모드 전환 버튼이 들어갈 컨테이너
-    editing_mode = "structure"  # 초기 모드는 구조 수정 모드
-    selected_cell = None  # 선택된 셀 (i, j 좌표)
-
-    def enable_text_mode(e):  # 텍스트 수정 모드로 전환
+    def enable_text_mode(e):
         nonlocal editing_mode
         editing_mode = "text"
         mode_buttons.content = build_mode_buttons()
         table_column.controls = build_table_rows()
         page.update()
 
-    def enable_structure_mode(e):  # 구조 수정 모드로 전환
+    def enable_structure_mode(e):
         nonlocal editing_mode
         editing_mode = "structure"
         mode_buttons.content = build_mode_buttons()
         table_column.controls = build_table_rows()
         page.update()
 
-    def handle_border_toggle(i, j):  # 셀 클릭 시 테두리 토글 핸들러
+    def handle_border_toggle(i, j):
         def handler(e):
             nonlocal selected_cell
             if editing_mode != "structure":
@@ -44,12 +43,12 @@ def table_editor_view(page: ft.Page):  # 메인 테이블 편집기 뷰 함수
             page.update()
         return handler
 
-    def make_on_change(i, j):  # 텍스트 입력 시 셀 값 업데이트 핸들러
+    def make_on_change(i, j):
         def handler(e):
             update_cell(table_data, i, j, e.control.value)
         return handler
 
-    def build_table_rows():  # 현재 상태에 따라 테이블 행 전체를 구성
+    def build_table_rows():
         rows = []
         for i, row in enumerate(table_data):
             cells = []
@@ -112,7 +111,7 @@ def table_editor_view(page: ft.Page):  # 메인 테이블 편집기 뷰 함수
             rows.append(ft.Row(controls=cells, spacing=0))
         return rows
 
-    def build_mode_buttons():  # 텍스트/구조 전환 버튼 UI 생성
+    def build_mode_buttons():
         return ft.Row([
             ft.ElevatedButton(
                 "Edit Text",
@@ -147,15 +146,19 @@ def table_editor_view(page: ft.Page):  # 메인 테이블 편집기 뷰 함수
             ], spacing=10)
         )
 
-    return ft.View(  # 최종적으로 전체 뷰를 반환
+    return ft.View(
         route="/table",
         scroll=ft.ScrollMode.AUTO,
         controls=[
             ft.Text("APA Table Editor", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
-            ft.Text("StatStas does not support font settings or text alignment.\n"
-                    "Please export your table to Word and complete the final formatting there.\n"
-                    "Lines that look slightly misaligned in the editor will be cleanly aligned in the exported document.",
-                    size=12, color=ft.colors.GREY_600, italic=True),
+            ft.Text(
+                "StatStas does not support font settings or text alignment.\n"
+                "Please export your table to Word and complete the final formatting there.\n"
+                "Lines that look slightly misaligned in the editor will be cleanly aligned in the exported document.",
+                size=12,
+                color=ft.colors.GREY_600,
+                italic=True
+            ),
             ft.Container(height=12),
             mode_buttons,
             *tools_column,
@@ -165,6 +168,31 @@ def table_editor_view(page: ft.Page):  # 메인 테이블 편집기 뷰 함수
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
+            ),
+            ft.Container(
+                alignment=ft.alignment.center_right,
+                content=ft.Column([
+                    ft.Text(
+                        "If you have any questions or need support, feel free to email me.",
+                        size=14,
+                        weight=ft.FontWeight.NORMAL,
+                        color=ft.colors.BLUE_GREY_700
+                    ),
+                    ft.Row([
+                        ft.Text("E-mail:", size=14),
+                        ft.Text("eugenemariastas@gmail.com", size=13, color=ft.colors.CYAN_400),
+                        ft.IconButton(
+                            icon=ft.icons.CONTENT_COPY,
+                            tooltip="Copy email",
+                            icon_color=ft.colors.GREY_600,
+                            style=ft.ButtonStyle(
+                                shape=ft.RoundedRectangleBorder(radius=6),
+                                overlay_color=ft.colors.with_opacity(0.1, ft.colors.CYAN_100)
+                            ),
+                            on_click=lambda e: page.set_clipboard("eugenemariastas@gmail.com")
+                        )
+                    ])
+                ])
             ),
             ft.Row([
                 ft.ElevatedButton("⬅️ Back", on_click=lambda e: page.go("/"), style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200)),

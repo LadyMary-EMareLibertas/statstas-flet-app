@@ -1,6 +1,6 @@
 import flet as ft
 import numpy as np
-from stats.ttest_logic import run_paired_ttest, compute_sd
+from stats.tools.t_test.ttest_logic import run_paired_ttest, compute_sd
 from stats.references import get_references_for_test
 
 # Paired t-test 결과 화면 View 정의 함수

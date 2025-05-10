@@ -1,10 +1,11 @@
 import os
-from docx import Document
-from docx.enum.table import WD_ALIGN_VERTICAL
-from docx.shared import Pt
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
+from docx import Document  # python-docx 모듈을 사용해 Word 문서 구성
+from docx.enum.table import WD_ALIGN_VERTICAL  # python-docx 모듈을 사용해 Word 문서 구성
+from docx.shared import Pt  # python-docx 모듈을 사용해 Word 문서 구성
+from docx.oxml import OxmlElement  # python-docx 모듈을 사용해 Word 문서 구성
+from docx.oxml.ns import qn  # python-docx 모듈을 사용해 Word 문서 구성
 
+# APA 스타일에 맞게 문단 스타일 설정
 def set_apa_paragraph_style(paragraph):
     paragraph.paragraph_format.line_spacing = Pt(12)
     paragraph.paragraph_format.space_after = Pt(0)
@@ -12,6 +13,7 @@ def set_apa_paragraph_style(paragraph):
     run.font.name = "Times New Roman"
     run.font.size = Pt(11)
 
+# 셀 객체에 사용자 정의 테두리 스타일 적용
 def set_cell_border_from_data(cell, border_top, border_bottom):
     tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
@@ -31,15 +33,16 @@ def set_cell_border_from_data(cell, border_top, border_bottom):
 
     tcPr.append(tcBorders)
 
+# Flet 테이블 데이터를 Word 문서로 내보내는 함수 정의
 def export_table_to_word(table_data, filename="exports/table_export_test.docx"):
     print("🟢 Export started...")
     os.makedirs("exports", exist_ok=True)
 
-    doc = Document()
+    doc = Document()  # 새 Word 문서 객체 생성
     n_rows = len(table_data)
     n_cols = len(table_data[0]) if n_rows > 0 else 0
 
-    table = doc.add_table(rows=n_rows, cols=n_cols)
+    table = doc.add_table(rows=n_rows, cols=n_cols)  # Word 문서에 테이블 생성, 행렬 크기 고정
     table.autofit = True
 
     merge_tracker = [[False]*n_cols for _ in range(n_rows)]
@@ -84,6 +87,6 @@ def export_table_to_word(table_data, filename="exports/table_export_test.docx"):
                         merged_cell = merged_cell.merge(table.cell(i, j + merge_j))
                         merge_tracker[i][j + merge_j] = True
 
-    doc.save(filename)
+    doc.save(filename)  # 최종 문서를 docx로 저장
     print(f"✅ Exported to {filename}")
     os.system(f"open '{filename}'")

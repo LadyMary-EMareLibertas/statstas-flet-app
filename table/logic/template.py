@@ -1,7 +1,7 @@
-from table.table_logic import cell
+from table.logic.structure import cell
 
-def get_default_table():
-    return [
+def get_default_table():  # 기본 표 형태를 정의하는 함수
+    return [  # 기본 표 행렬을 반환
         [cell("Variable", align="left", top=True),
          cell("Visual", align="left", top=True),
          cell("", align="left", top=True),

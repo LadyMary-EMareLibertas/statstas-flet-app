@@ -1,3 +1,4 @@
+# 셀 객체 생성 함수: 텍스트 값, 정렬, 편집 가능 여부, 테두리 색/두께 등 설정
 def cell(val, align="center", editable=True, top=False, bottom=False, width=85, visible=True):
     return {
         "value": val,
@@ -15,6 +16,7 @@ def cell(val, align="center", editable=True, top=False, bottom=False, width=85, 
         }
     }
 
+# 초기 템플릿 테이블 반환
 def get_default_table():
     return [
         [cell("", "left"), cell("M", bottom=True), cell("SD", bottom=True), cell("M", bottom=True),
@@ -26,10 +28,12 @@ def get_default_table():
         [cell("***p < .01.", "left", editable=True, width=680)] + [cell("", editable=False, visible=False) for _ in range(6)]
     ]
 
+# 셀의 텍스트 값 업데이트
 def update_cell(data, row, col, new_value):
     data[row][col]["value"] = new_value
     return data
 
+# 셀의 테두리 색상 토글 (흰색 <-> 검정)
 def toggle_border_color(data, row, col, direction="top"):
     border_key = f"border_{direction}"
     border = data[row][col].get(border_key, {"color": "white", "thickness": 1})
@@ -40,13 +44,16 @@ def toggle_border_color(data, row, col, direction="top"):
     }
     return data
 
+# 테두리 스타일 불러오기 (없을 경우 기본값 반환)
 def get_border_style(cell, direction):
     return cell.get(f"border_{direction}", {"color": "white", "thickness": 0})
 
+# 정렬 문자열을 Flet 정렬 열거형으로 변환
 def get_text_alignment(align_str):
     from flet import TextAlign
     return getattr(TextAlign, align_str.upper(), TextAlign.LEFT)
 
+# 선택된 행 아래에 새 행 추가
 def add_row(data, row_index, template_row=None):
     """Insert new row below the given row index."""
     from copy import deepcopy
@@ -56,6 +63,7 @@ def add_row(data, row_index, template_row=None):
     data.insert(row_index + 1, new_row)
     return data
 
+# 선택된 열 오른쪽에 새 열 추가
 def add_column(data, col_index, template_column=None):
     """Insert new column to the right of the given column index."""
     from copy import deepcopy
@@ -67,6 +75,7 @@ def add_column(data, col_index, template_column=None):
         row.insert(col_index + 1, new_cell)
     return data
 
+# 셀 테두리 두께 토글 (1 <-> 2)
 def toggle_border_thickness(data, row, col, direction="top"):
     """Toggle the thickness of a cell border between 1 and 2."""
     border_key = f"border_{direction}"

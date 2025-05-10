@@ -10,7 +10,7 @@ from stats.statistics import statistics_view
 from stats.tools.t_test.paired_two import paired_view
 
 # 테이블 편집기 (APA 기본 템플릿)
-from table.table_editor import table_editor_view
+from table.views.editor_view import table_editor_view
 
 def main(page: ft.Page):
     # 페이지 제목 설정 (브라우저 탭이나 앱 상단에 표시됨)

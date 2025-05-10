@@ -1,11 +1,11 @@
 from copy import deepcopy
-from table.table_logic import (
+from table.logic.structure import (
     add_row,
     add_column,
     toggle_border_thickness,
 )
 
-def handle_add_row(table_data, selected_cell, table_column, build_table_rows, page):
+def handle_add_row(table_data, selected_cell, table_column, build_table_rows, page):  # 행 추가 버튼 클릭 시 호출되는 핸들러 함수
     if selected_cell:
         i, _ = selected_cell
         template_row = table_data[i]
@@ -16,7 +16,7 @@ def handle_add_row(table_data, selected_cell, table_column, build_table_rows, pa
     table_column.controls = build_table_rows()
     page.update()
 
-def handle_delete_row(table_data, selected_cell, table_column, build_table_rows, page):
+def handle_delete_row(table_data, selected_cell, table_column, build_table_rows, page):  # 행 삭제 버튼 클릭 시 호출되는 핸들러 함수
     if not selected_cell:
         return
     i, _ = selected_cell
@@ -25,7 +25,7 @@ def handle_delete_row(table_data, selected_cell, table_column, build_table_rows,
     table_column.controls = build_table_rows()
     page.update()
 
-def handle_add_column(table_data, selected_cell, table_column, build_table_rows, page):
+def handle_add_column(table_data, selected_cell, table_column, build_table_rows, page):  # 열 추가 버튼 클릭 시 호출되는 핸들러 함수
     if selected_cell:
         _, j = selected_cell
         template_column = [row[j] for row in table_data]
@@ -36,7 +36,7 @@ def handle_add_column(table_data, selected_cell, table_column, build_table_rows,
     table_column.controls = build_table_rows()
     page.update()
 
-def handle_delete_column(table_data, selected_cell, table_column, build_table_rows, page):
+def handle_delete_column(table_data, selected_cell, table_column, build_table_rows, page):  # 열 삭제 버튼 클릭 시 호출되는 핸들러 함수
     if not selected_cell:
         return
     _, j = selected_cell
@@ -46,7 +46,7 @@ def handle_delete_column(table_data, selected_cell, table_column, build_table_ro
     table_column.controls = build_table_rows()
     page.update()
 
-def handle_toggle_bold(table_data, selected_cell, table_column, build_table_rows, page):
+def handle_toggle_bold(table_data, selected_cell, table_column, build_table_rows, page):  # 테두리 두께 토글 버튼 클릭 시 호출되는 핸들러 함수
     if not selected_cell:
         return
     i, j = selected_cell

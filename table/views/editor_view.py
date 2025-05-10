@@ -152,12 +152,8 @@ def table_editor_view(page: ft.Page):
         controls=[
             ft.Text("APA Table Editor", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.CYAN_400),
             ft.Text(
-                "StatStas does not support font settings or text alignment.\n"
-                "Please export your table to Word and complete the final formatting there.\n"
-                "Lines that look slightly misaligned in the editor will be cleanly aligned in the exported document.",
-                size=12,
-                color=ft.colors.GREY_600,
-                italic=True
+                "StatStas does not support font settings or text alignment. Please export your table to Word and complete the final formatting there. Lines that look slightly misaligned in the editor will be cleanly aligned in the exported document.",
+                size=12, color=ft.colors.GREY_600, italic=True
             ),
             ft.Container(height=12),
             mode_buttons,
@@ -169,19 +165,18 @@ def table_editor_view(page: ft.Page):
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
             ),
-            ft.Container(
-                alignment=ft.alignment.center_right,
-                content=ft.Column([
+            ft.Container(height=24),
+            ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
                     ft.Text(
                         "If you have any questions or need support, feel free to email me.",
-                        size=14,
-                        weight=ft.FontWeight.W_500,
-                        color=ft.colors.BLUE_GREY_700
+                        size=13, color=ft.colors.BLUE_GREY_700
                     ),
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.END,
+                        alignment=ft.MainAxisAlignment.CENTER,
                         controls=[
-                            ft.Text("E-mail:", size=14),
+                            ft.Text("E-mail:", size=13),
                             ft.Text("eugenemariastas@gmail.com", size=13, color=ft.colors.CYAN_400),
                             ft.IconButton(
                                 icon=ft.icons.CONTENT_COPY,
@@ -194,10 +189,10 @@ def table_editor_view(page: ft.Page):
                                 on_click=lambda e: page.set_clipboard("eugenemariastas@gmail.com")
                             )
                         ]
-                    ),
-                    ft.Container(height=24)
-                ])
+                    )
+                ]
             ),
+            ft.Container(height=20),
             ft.Row([
                 ft.ElevatedButton("⬅️ Back", on_click=lambda e: page.go("/"), style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200)),
                 ft.Container(expand=True),

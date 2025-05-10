@@ -11,8 +11,8 @@ def render_cell(cell, i, j, state, handle_border_toggle, make_on_change):
 
     val = cell.get("value", "")
     width = cell.get("width", 85)
-    border_top = get_border_style(cell, "top")
-    border_bottom = get_border_style(cell, "bottom")
+    border_top = dict(get_border_style(cell, "top"))       # 강제로 새로운 객체 생성
+    border_bottom = dict(get_border_style(cell, "bottom")) # ↖ 이렇게 하면 flet이 rerender함
     align = cell.get("align", "left")
     editable = cell.get("editable", True)
 

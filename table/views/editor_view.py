@@ -7,6 +7,13 @@ from table.logic.handlers import (
 from table.logic.table_renderer import build_table_rows
 from table.views.mode_buttons import build_mode_buttons
 from table.views.footer import footer_section
+from table.logic.structure import (
+    handle_add_row,
+    handle_delete_row,
+    handle_add_column,
+    handle_delete_column,
+    handle_toggle_bold
+)
 
 def table_editor_view(page: ft.Page):
     state = TableEditorState()

@@ -1,150 +1,52 @@
-from table.core.exporter import export_table_to_word
 import flet as ft
-from table.logic.structure import (
-    update_cell,
-    toggle_border_color,
+from table.core.exporter import export_table_to_word
+from table.logic.state import TableEditorState
+from table.logic.handlers import (
+    enable_text_mode, enable_structure_mode, handle_border_toggle, make_on_change
 )
-from table.logic.template import get_default_table
-from table.logic.style import (
-    get_border_style,
-    get_text_alignment,
-)
-from table.logic.ui_state import *
+from table.logic.table_renderer import build_table_rows
+from table.views.mode_buttons import build_mode_buttons
+from table.views.footer import footer_section
 
 def table_editor_view(page: ft.Page):
-    table_data = get_default_table()
-    table_column = ft.Column(spacing=0)
-    mode_buttons = ft.Container()
-    editing_mode = "structure"
-    selected_cell = None
+    state = TableEditorState()
+    ui = {
+        "table_column": ft.Column(spacing=0),
+        "mode_buttons": ft.Container()
+    }
 
-    def enable_text_mode(e):
-        nonlocal editing_mode
-        editing_mode = "text"
-        mode_buttons.content = build_mode_buttons()
-        table_column.controls = build_table_rows()
-        page.update()
+    def rebuild():
+        ui["mode_buttons"].content = build_mode_buttons(
+            state.editing_mode,
+            enable_text_mode(state, ui, page),
+            enable_structure_mode(state, ui, page)
+        )
+        ui["table_column"].controls = build_table_rows(
+            state,
+            handle_border_toggle(state, ui, page),
+            make_on_change(state)
+        )
 
-    def enable_structure_mode(e):
-        nonlocal editing_mode
-        editing_mode = "structure"
-        mode_buttons.content = build_mode_buttons()
-        table_column.controls = build_table_rows()
-        page.update()
+    rebuild()
 
-    def handle_border_toggle(i, j):
-        def handler(e):
-            nonlocal selected_cell
-            if editing_mode != "structure":
-                return
-            selected_cell = (i, j)
-            toggle_border_color(table_data, i, j, direction="top")
-            table_column.controls = build_table_rows()
-            page.update()
-        return handler
-
-    def make_on_change(i, j):
-        def handler(e):
-            update_cell(table_data, i, j, e.control.value)
-        return handler
-
-    def build_table_rows():
-        rows = []
-        for i, row in enumerate(table_data):
-            cells = []
-            for j, cell in enumerate(row):
-                if not cell.get("visible", True):
-                    if editing_mode == "text" and cell.get("editable", False):
-                        pass
-                    else:
-                        cells.append(ft.Container(width=0, height=0))
-                        continue
-
-                val = cell.get("value", "")
-                width = cell.get("width", 85)
-                border_top = get_border_style(cell, "top")
-                border_bottom = get_border_style(cell, "bottom")
-                align = cell.get("align", "left")
-                editable = cell.get("editable", True)
-
-                border = ft.border.only(
-                    top=ft.BorderSide(width=border_top["thickness"], color=getattr(ft.colors, border_top["color"].upper(), ft.colors.TRANSPARENT)),
-                    bottom=ft.BorderSide(width=border_bottom["thickness"], color=getattr(ft.colors, border_bottom["color"].upper(), ft.colors.TRANSPARENT))
-                )
-
-                if editing_mode == "text" and editable:
-                    content = ft.TextField(
-                        value=val,
-                        text_size=12,
-                        height=26,
-                        text_align=get_text_alignment(align),
-                        content_padding=ft.padding.symmetric(vertical=2, horizontal=4),
-                        border=ft.InputBorder.NONE,
-                        bgcolor=ft.colors.TRANSPARENT,
-                        on_change=make_on_change(i, j),
-                        autofocus=False
-                    )
-                    cell_container = ft.Container(
-                        width=width,
-                        height=42,
-                        bgcolor=ft.colors.WHITE,
-                        border=border,
-                        alignment=ft.alignment.center_left,
-                        content=content
-                    )
-                else:
-                    content = ft.Text(val, size=12, text_align=get_text_alignment(align))
-                    is_selected = (editing_mode == "structure" and selected_cell == (i, j))
-                    cell_container = ft.GestureDetector(
-                        on_tap=handle_border_toggle(i, j),
-                        content=ft.Container(
-                            width=width,
-                            height=42,
-                            bgcolor=ft.colors.BLUE_100 if is_selected else ft.colors.WHITE,
-                            border=border,
-                            alignment=ft.alignment.center_left,
-                            content=content
-                        )
-                    )
-
-                cells.append(cell_container)
-            rows.append(ft.Row(controls=cells, spacing=0))
-        return rows
-
-    def build_mode_buttons():
-        return ft.Row([
-            ft.ElevatedButton(
-                "Edit Text",
-                on_click=enable_text_mode,
-                style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "text" else ft.colors.GREY_200)
-            ),
-            ft.ElevatedButton(
-                "Edit Structure",
-                on_click=enable_structure_mode,
-                style=ft.ButtonStyle(bgcolor=ft.colors.BLUE_100 if editing_mode == "structure" else ft.colors.GREY_200)
-            )
-        ], spacing=10)
-
-    mode_buttons.content = build_mode_buttons()
-    table_column.controls = build_table_rows()
-
-    tools_column = []
-    if editing_mode == "structure":
-        tools_column.append(
+    def build_tools():
+        if state.editing_mode != "structure":
+            return []
+        return [
             ft.Column([
                 ft.Row([
-                    ft.ElevatedButton("➕ Add Row", on_click=lambda e: handle_add_row(table_data, selected_cell, table_column, build_table_rows, page)),
-                    ft.ElevatedButton("➖ Delete Row", on_click=lambda e: handle_delete_row(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("➕ Add Row", on_click=lambda e: handle_add_row(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
+                    ft.ElevatedButton("➖ Delete Row", on_click=lambda e: handle_delete_row(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
                     ft.ElevatedButton("↩️ Undo", on_click=lambda e: None),
                 ], spacing=10),
                 ft.Row([
-                    ft.ElevatedButton("➕ Add Column", on_click=lambda e: handle_add_column(table_data, selected_cell, table_column, build_table_rows, page)),
-                    ft.ElevatedButton("➖ Delete Column", on_click=lambda e: handle_delete_column(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("➕ Add Column", on_click=lambda e: handle_add_column(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
+                    ft.ElevatedButton("➖ Delete Column", on_click=lambda e: handle_delete_column(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
                     ft.ElevatedButton("🔄 Reverse Undo", on_click=lambda e: None),
-                    ft.ElevatedButton("🔳 Toggle Bold Line", on_click=lambda e: handle_toggle_bold(table_data, selected_cell, table_column, build_table_rows, page)),
+                    ft.ElevatedButton("🔳 Toggle Bold Line", on_click=lambda e: handle_toggle_bold(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
                 ], spacing=10)
             ], spacing=10)
-        )
+        ]
 
     return ft.View(
         route="/table",
@@ -156,47 +58,16 @@ def table_editor_view(page: ft.Page):
                 size=12, color=ft.colors.GREY_600, italic=True
             ),
             ft.Container(height=12),
-            mode_buttons,
-            *tools_column,
+            ui["mode_buttons"],
+            *build_tools(),
             ft.Container(
-                content=table_column,
+                content=ui["table_column"],
                 padding=6,
                 bgcolor=ft.colors.WHITE,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=6
             ),
             ft.Container(height=24),
-            ft.Column(
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    ft.Text(
-                        "If you have any questions or need support, feel free to email me.",
-                        size=13, color=ft.colors.BLUE_GREY_700
-                    ),
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        controls=[
-                            ft.Text("E-mail:", size=13),
-                            ft.Text("eugenemariastas@gmail.com", size=13, color=ft.colors.CYAN_400),
-                            ft.IconButton(
-                                icon=ft.icons.CONTENT_COPY,
-                                tooltip="Copy email",
-                                icon_color=ft.colors.GREY_600,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=6),
-                                    overlay_color=ft.colors.with_opacity(0.25, ft.colors.CYAN_400)
-                                ),
-                                on_click=lambda e: page.set_clipboard("eugenemariastas@gmail.com")
-                            )
-                        ]
-                    )
-                ]
-            ),
-            ft.Container(height=20),
-            ft.Row([
-                ft.ElevatedButton("⬅️ Back", on_click=lambda e: page.go("/"), style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200)),
-                ft.Container(expand=True),
-                ft.ElevatedButton("📤 Export to Word", on_click=lambda e: export_table_to_word(table_data), style=ft.ButtonStyle(bgcolor=ft.colors.CYAN_200))
-            ])
+            footer_section(page, state.table_data)
         ]
     )

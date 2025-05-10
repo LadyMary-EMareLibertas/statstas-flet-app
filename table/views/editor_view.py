@@ -32,21 +32,37 @@ def table_editor_view(page: ft.Page):
     def build_tools():
         if state.editing_mode != "structure":
             return []
-        return [
-            ft.Column([
-                ft.Row([
-                    ft.ElevatedButton("➕ Add Row", on_click=lambda e: handle_add_row(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
-                    ft.ElevatedButton("➖ Delete Row", on_click=lambda e: handle_delete_row(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
-                    ft.ElevatedButton("↩️ Undo", on_click=lambda e: None),
-                ], spacing=10),
-                ft.Row([
-                    ft.ElevatedButton("➕ Add Column", on_click=lambda e: handle_add_column(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
-                    ft.ElevatedButton("➖ Delete Column", on_click=lambda e: handle_delete_column(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
-                    ft.ElevatedButton("🔄 Reverse Undo", on_click=lambda e: None),
-                    ft.ElevatedButton("🔳 Toggle Bold Line", on_click=lambda e: handle_toggle_bold(state.table_data, state.selected_cell, ui["table_column"], lambda: build_table_rows(state, handle_border_toggle(state, ui, page), make_on_change(state)), page) if state.selected_cell else None),
-                ], spacing=10)
-            ], spacing=10)
-        ]
+
+        def row_action(label, handler_func):
+            return ft.ElevatedButton(
+                label,
+                on_click=lambda e: handler_func(
+                    state.table_data,
+                    state.selected_cell,
+                    ui["table_column"],
+                    lambda: build_table_rows(
+                        state,
+                        handle_border_toggle(state, ui, page),
+                        make_on_change(state)
+                    ),
+                    page
+                ) if state.selected_cell else None
+            )
+
+        structure_row = ft.Row([
+            row_action("➕ Add Row", handle_add_row),
+            row_action("➖ Delete Row", handle_delete_row),
+            ft.ElevatedButton("↩️ Undo", on_click=lambda e: None),
+        ], spacing=10)
+
+        column_row = ft.Row([
+            row_action("➕ Add Column", handle_add_column),
+            row_action("➖ Delete Column", handle_delete_column),
+            ft.ElevatedButton("🔄 Reverse Undo", on_click=lambda e: None),
+            row_action("🔳 Toggle Bold Line", handle_toggle_bold),
+        ], spacing=10)
+
+        return [ft.Column([structure_row, column_row], spacing=10)]
 
     return ft.View(
         route="/table",

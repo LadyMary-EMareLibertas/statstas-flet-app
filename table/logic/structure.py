@@ -1,9 +1,13 @@
+from copy import deepcopy
+
 def handle_add_row(table_data, selected_cell, table_column, build_rows_fn, page):
-    if not table_data:
+    if not table_data or selected_cell is None:
         return
-    num_columns = len(table_data[0])
-    new_row = [{"value": "", "width": 85, "editable": True, "visible": True} for _ in range(num_columns)]
-    table_data.append(new_row)
+
+    i, _ = selected_cell
+    template_row = table_data[i]
+    new_row = [deepcopy(cell) for cell in template_row]  # ✅ 선택된 행 복사
+    table_data.insert(i + 1, new_row)
     table_column.controls = build_rows_fn()
     page.update()
 
@@ -17,8 +21,13 @@ def handle_delete_row(table_data, selected_cell, table_column, build_rows_fn, pa
         page.update()
 
 def handle_add_column(table_data, selected_cell, table_column, build_rows_fn, page):
+    from copy import deepcopy
+    if selected_cell is None:
+        return
+    _, j = selected_cell
     for row in table_data:
-        row.append({"value": "", "width": 85, "editable": True, "visible": True})
+        new_cell = deepcopy(row[j]) if 0 <= j < len(row) else {"value": "", "width": 85, "editable": True, "visible": True}
+        row.insert(j + 1, new_cell)
     table_column.controls = build_rows_fn()
     page.update()
 

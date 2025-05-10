@@ -1,25 +1,24 @@
 import flet as ft
 from table.views.mode_buttons import build_mode_buttons
 from table.logic.table_renderer import build_table_rows
-from table.logic.template import toggle_border_color  # ✅ 정정된 위치
+from table.logic.template import toggle_border_color
 from table.logic.state import TEXT_MODE, STRUCTURE_MODE
 
-# make_on_change는 최상단에 두어 순환참조 방지
 def make_on_change(state, ui, page):
     def wrapper(i, j):
         def handler(e):
             from table.logic.template import update_cell
             update_cell(state.table_data, i, j, e.control.value)
 
-            # 텍스트 수정 후 즉시 리렌더링
-            ui["table_column"].controls = build_table_rows(
-                state,
-                ui,
-                page,
-                handle_border_toggle,
-                make_on_change
-            )
-            page.update()
+            # ⚠️ 렌더링 생략: 텍스트 입력 중 커서 튐 방지
+            # ui["table_column"].controls = build_table_rows(
+            #     state,
+            #     ui,
+            #     page,
+            #     handle_border_toggle,
+            #     make_on_change
+            # )
+            # page.update()
         return handler
     return wrapper
 

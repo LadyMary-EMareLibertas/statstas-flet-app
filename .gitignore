@@ -1,0 +1,30 @@
+# Python 가상환경
+.venv/
+env/
+venv/
+
+# 캐시/컴파일 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 시스템 불필요 파일
+.DS_Store
+Thumbs.db
+
+# IDE 설정
+.vscode/
+.idea/
+
+# 빌드 및 배포 관련
+build/
+dist/
+*.egg-info/
+
+# 로그/임시
+*.log
+*.tmp
+
+# 문서 휘발성 백업
+*.docx~
+~$*.docx

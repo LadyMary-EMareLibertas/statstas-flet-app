@@ -1,16 +1,16 @@
 import flet as ft
 
 # 홈 페이지
-from views.home.home import home_view
+from home import home_view
 
 # 통계 메뉴 페이지
-from views.statistics.statistics import statistics_view
+from stats.statistics import statistics_view
 
 # t-test 분석 도구 (Paired t-test)
-from views.tools.t_test.paired_two import paired_view
+from stats.tools.t_test.paired_two import paired_view
 
 # 테이블 편집기 (APA 기본 템플릿)
-from views.table.table_editor import table_editor_view
+from table.table_editor import table_editor_view
 
 def main(page: ft.Page):
     # 페이지 제목 설정 (브라우저 탭이나 앱 상단에 표시됨)

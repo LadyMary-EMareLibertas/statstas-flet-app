@@ -1,5 +1,5 @@
 from copy import deepcopy
-from core.table_logic import (
+from table.table_logic import (
     add_row,
     add_column,
     toggle_border_thickness,

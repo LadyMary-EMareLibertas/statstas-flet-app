@@ -1,7 +1,7 @@
 import flet as ft
 import numpy as np
-from core.ttest_logic import run_paired_ttest, compute_sd
-from references.apa import get_references_for_test
+from stats.ttest_logic import run_paired_ttest, compute_sd
+from stats.references import get_references_for_test
 
 # Paired t-test 결과 화면 View 정의 함수
 def paired_view(page: ft.Page):

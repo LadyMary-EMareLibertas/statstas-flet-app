@@ -1,15 +1,15 @@
-from core.table_exporter import export_table_to_word
+from table.table_exporter import export_table_to_word
 import flet as ft
-from core.table_logic import (
+from table.table_logic import (
     update_cell,
     toggle_border_color,
 )
-from core.table_template import get_default_table
-from views.table.table_style import (
+from table.table_template import get_default_table
+from table.table_style import (
     get_border_style,
     get_text_alignment,
 )
-from views.table.table_ui_logic import *
+from table.table_ui_logic import *
 
 def table_editor_view(page: ft.Page):
     table_data = get_default_table()

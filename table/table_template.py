@@ -1,4 +1,4 @@
-from core.table_logic import cell
+from table.table_logic import cell
 
 def get_default_table():
     return [

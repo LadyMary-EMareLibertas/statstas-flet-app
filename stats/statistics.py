@@ -1,6 +1,6 @@
 import flet as ft
 import difflib
-from data.stat_tests import stat_tests  # 통계 테스트 정의된 리스트 불러오기
+from stats.stat_tests import stat_tests  # 통계 테스트 정의된 리스트 불러오기
 
 # 통계 도구 선택 화면 View 정의 함수
 def statistics_view(page: ft.Page):

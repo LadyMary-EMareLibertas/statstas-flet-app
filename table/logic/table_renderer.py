@@ -2,7 +2,7 @@ import flet as ft
 from table.logic.style import get_border_style, get_text_alignment
 from table.logic.state import TEXT_MODE, STRUCTURE_MODE
 
-def render_cell(cell, i, j, state, handle_border_toggle, make_on_change):
+def render_cell(cell, i, j, state, ui, page, handle_border_toggle, make_on_change):
     if not cell.get("visible", True):
         if state.editing_mode == TEXT_MODE and cell.get("editable", False):
             pass
@@ -11,8 +11,8 @@ def render_cell(cell, i, j, state, handle_border_toggle, make_on_change):
 
     val = cell.get("value", "")
     width = cell.get("width", 85)
-    border_top = dict(get_border_style(cell, "top"))       # 강제로 새로운 객체 생성
-    border_bottom = dict(get_border_style(cell, "bottom")) # ↖ 이렇게 하면 flet이 rerender함
+    border_top = dict(get_border_style(cell, "top"))
+    border_bottom = dict(get_border_style(cell, "bottom"))
     align = cell.get("align", "left")
     editable = cell.get("editable", True)
 
@@ -36,14 +36,14 @@ def render_cell(cell, i, j, state, handle_border_toggle, make_on_change):
                 content_padding=ft.padding.symmetric(vertical=2, horizontal=4),
                 border=ft.InputBorder.NONE,
                 bgcolor=ft.colors.TRANSPARENT,
-                on_change=make_on_change(i, j),
+                on_change=make_on_change(state, ui, page)(i, j),
                 autofocus=False
             )
         )
     else:
         is_selected = (state.editing_mode == STRUCTURE_MODE and state.selected_cell == (i, j))
         return ft.GestureDetector(
-            on_tap=handle_border_toggle(i, j),
+            on_tap=handle_border_toggle(state, ui, page)(i, j),
             content=ft.Container(
                 width=width,
                 height=42,
@@ -54,11 +54,11 @@ def render_cell(cell, i, j, state, handle_border_toggle, make_on_change):
             )
         )
 
-def build_table_rows(state, handle_border_toggle, make_on_change):
+def build_table_rows(state, ui, page, handle_border_toggle, make_on_change):
     rows = []
     for i, row in enumerate(state.table_data):
         cells = [
-            render_cell(cell, i, j, state, handle_border_toggle, make_on_change)
+            render_cell(cell, i, j, state, ui, page, handle_border_toggle, make_on_change)
             for j, cell in enumerate(row)
         ]
         rows.append(ft.Row(controls=cells, spacing=0))

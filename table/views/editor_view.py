@@ -30,8 +30,10 @@ def table_editor_view(page: ft.Page):
         )
         ui["table_column"].controls = build_table_rows(
             state,
-            handle_border_toggle(state, ui, page),
-            make_on_change(state)
+            ui,
+            page,
+            handle_border_toggle,
+            make_on_change
         )
 
     rebuild()
@@ -49,8 +51,10 @@ def table_editor_view(page: ft.Page):
                     ui["table_column"],
                     lambda: build_table_rows(
                         state,
-                        handle_border_toggle(state, ui, page),
-                        make_on_change(state)
+                        ui,
+                        page,
+                        handle_border_toggle,
+                        make_on_change
                     ),
                     page
                 ) if state.selected_cell else None

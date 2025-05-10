@@ -175,23 +175,27 @@ def table_editor_view(page: ft.Page):
                     ft.Text(
                         "If you have any questions or need support, feel free to email me.",
                         size=14,
-                        weight=ft.FontWeight.NORMAL,
+                        weight=ft.FontWeight.W_500,
                         color=ft.colors.BLUE_GREY_700
                     ),
-                    ft.Row([
-                        ft.Text("E-mail:", size=14),
-                        ft.Text("eugenemariastas@gmail.com", size=13, color=ft.colors.CYAN_400),
-                        ft.IconButton(
-                            icon=ft.icons.CONTENT_COPY,
-                            tooltip="Copy email",
-                            icon_color=ft.colors.GREY_600,
-                            style=ft.ButtonStyle(
-                                shape=ft.RoundedRectangleBorder(radius=6),
-                                overlay_color=ft.colors.with_opacity(0.1, ft.colors.CYAN_100)
-                            ),
-                            on_click=lambda e: page.set_clipboard("eugenemariastas@gmail.com")
-                        )
-                    ])
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.END,
+                        controls=[
+                            ft.Text("E-mail:", size=14),
+                            ft.Text("eugenemariastas@gmail.com", size=13, color=ft.colors.CYAN_400),
+                            ft.IconButton(
+                                icon=ft.icons.CONTENT_COPY,
+                                tooltip="Copy email",
+                                icon_color=ft.colors.GREY_600,
+                                style=ft.ButtonStyle(
+                                    shape=ft.RoundedRectangleBorder(radius=6),
+                                    overlay_color=ft.colors.with_opacity(0.25, ft.colors.CYAN_400)
+                                ),
+                                on_click=lambda e: page.set_clipboard("eugenemariastas@gmail.com")
+                            )
+                        ]
+                    ),
+                    ft.Container(height=24)
                 ])
             ),
             ft.Row([
